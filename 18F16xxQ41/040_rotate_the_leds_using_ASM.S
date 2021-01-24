@@ -59,11 +59,9 @@
 ;********************************************************************************
 
 ;Set aside RAM memory locations for variables. All variables are global.
- DELAYTEMP                        EQU 1280
- DELAYTEMP2                       EQU 1281
- SYSWAITTEMPMS                    EQU 1282
- SYSWAITTEMPMS_H                  EQU 1283
- SYSWAITTEMPS                     EQU 1284
+ DELAY1                           EQU 1280
+ DELAY2                           EQU 1281
+ DISPLAY                          EQU 1282
 
 ;********************************************************************************
 
@@ -84,101 +82,41 @@ BASPROGRAMSTART:
 	call	INITSYS
 
 ;Start of the main program
-;''
-;''******************************************************************
-;''
-;''  One way to create a delay is to spend time decrementing a value. In Great Cow BASIC the timing
-;''  can be accurately programmed since the user has control on how the
-;''  time delays are executed.
-;''
-;''  The LED is attached to PORTC.0 via a suitable resistor to 0v.  Another LED  is also attached to PORTC.0 via a suitable resistor to 0v.
-;''
-;''  We set an LED, you can try setting the other LEDs. Do not forget those appropiate resistors
-;''
-;''************************************************************************
-;''@author  EvanV
-;''@licence GPL
-;''@version 1.01
-;''@date    31.12.2020
-;----- Configuration
-;Chip Settings.
-;' -------------------PORTA----------------
-;' Bit#:  -7---6---5---4---3---2---1---0---
-;' IO:    ---------------------------------
-;'-----------------------------------------
-;'
-;' -------------------PORTB----------------
-;' Bit#:  -7---6---5---4---3---2---1---0---
-;' IO:    ---------------------------------
-;'-----------------------------------------
-;'
-;' ------------------PORTC-----------------
-;' Bit#:  -7---6---5---4---3---2---1---0---
-;' IO:    ----------------------------LED--
-;'-----------------------------------------
-;'
-;*****************************************************************************************************
-;Main program commences here.. everything before this is setup for the board.
-;Dir PORTC.0 Out
-	bcf	TRISC,0,ACCESS
-;Do
-SysDoLoop_S1:
-;wait for 1 second
-;Wait 1 s
-	movlw	1
-	movwf	SYSWAITTEMPS,ACCESS
-	call	Delay_S
-;Set the port bit
-;PORTC.0 = 0
-	bcf	LATC,0,ACCESS
-;wait for 1 second
-;Wait 1 s
-	movlw	1
-	movwf	SYSWAITTEMPS,ACCESS
-	call	Delay_S
-;Set the port bit
-;PORTC.0 = 1
-	bsf	LATC,0,ACCESS
-;Loop
-	bra	SysDoLoop_S1
-SysDoLoop_E1:
+;Dim Display, Delay1, Delay2 as byte
+START:
+;CLRF TRISC
+	clrf	TRISC,ACCESS
+;MOVLW 0x08
+	movlw	8
+;MOVWF Display
+	movwf	DISPLAY,ACCESS
+MAINLOOP:
+;MOVF Display,w    ;Copy the display to the LEDs
+	movf	DISPLAY,W,ACCESS
+;MOVWF PORTC
+	movwf	PORTC,ACCESS
+ONDELAYLOOP:
+;DECFSZ Delay1,f
+	decfsz	DELAY1,F,ACCESS
+;GOTO OndelayLoop
+	bra	ONDELAYLOOP
+;DECFSZ Delay2,f
+	decfsz	DELAY2,F,ACCESS
+;GOTO OndelayLoop
+	bra	ONDELAYLOOP
+;BCF STATUS,C      ;ensure the carry bit is clear
+	bcf	STATUS,0,ACCESS
+;RRF Display,f     ;Rotate Display right
+	rrcf	DISPLAY,F,ACCESS
+;BTFSC STATUS,C    ;Did the bit rotate into the carry?
+	btfsc	STATUS,0,ACCESS
+;BSF Display,3     ;yes, put it into bit 3.
+	bsf	DISPLAY,3,ACCESS
+;GOTO MainLoop
+	bra	MAINLOOP
 BASPROGRAMEND:
 	sleep
 	bra	BASPROGRAMEND
-
-;********************************************************************************
-
-Delay_MS:
-	incf	SYSWAITTEMPMS_H, F,ACCESS
-DMS_START:
-	movlw	129
-	movwf	DELAYTEMP2,ACCESS
-DMS_OUTER:
-	movlw	40
-	movwf	DELAYTEMP,ACCESS
-DMS_INNER:
-	decfsz	DELAYTEMP, F,ACCESS
-	bra	DMS_INNER
-	decfsz	DELAYTEMP2, F,ACCESS
-	bra	DMS_OUTER
-	decfsz	SYSWAITTEMPMS, F,ACCESS
-	bra	DMS_START
-	decfsz	SYSWAITTEMPMS_H, F,ACCESS
-	bra	DMS_START
-	return
-
-;********************************************************************************
-
-Delay_S:
-DS_START:
-	movlw	232
-	movwf	SYSWAITTEMPMS,ACCESS
-	movlw	3
-	movwf	SYSWAITTEMPMS_H,ACCESS
-	call	Delay_MS
-	decfsz	SYSWAITTEMPS, F,ACCESS
-	bra	DS_START
-	return
 
 ;********************************************************************************
 
@@ -211,8 +149,8 @@ INITSYS:
 	bcf	OSCCON1,1,BANKED
 ;NDIV0 = 0
 	bcf	OSCCON1,0,BANKED
-;OSCFRQ = 0b00001000  '64mhz
-	movlw	8
+;OSCFRQ = 0b00000010    '4mhz
+	movlw	2
 	movwf	OSCFRQ,BANKED
 ;asm showdebug _Complete_the_chip_setup_of_BSR,ADCs,ANSEL_and_other_key_setup_registers_or_register_bits
 ;Clear BSR on ChipFamily16 MCUs

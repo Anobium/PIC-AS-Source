@@ -61,9 +61,10 @@
 ;Set aside RAM memory locations for variables. All variables are global.
  DELAYTEMP                        EQU 1280
  DELAYTEMP2                       EQU 1281
+ SYSREPEATTEMP1                   EQU 1284
+ SYSTEMP1                         EQU 1285
  SYSWAITTEMPMS                    EQU 1282
  SYSWAITTEMPMS_H                  EQU 1283
- SYSWAITTEMPS                     EQU 1284
 
 ;********************************************************************************
 
@@ -85,26 +86,26 @@ BASPROGRAMSTART:
 
 ;Start of the main program
 ;''
-;''******************************************************************
+;'' This demonstration uses the master reset as an input.  This WILL ONLY work when you do NOT use Low Voltage Programming (LVP).
 ;''
-;''  One way to create a delay is to spend time decrementing a value. In Great Cow BASIC the timing
-;''  can be accurately programmed since the user has control on how the
-;''  time delays are executed.
+;'' The code will inspect the switch status, but should overcome most of the noise from a switch.
+;'' Some switches are worse than others.
 ;''
-;''  The LED is attached to PORTC.0 via a suitable resistor to 0v.  Another LED  is also attached to PORTC.0 via a suitable resistor to 0v.
+;'' When the switch is held down, one LED will be lit.
+;'' This time we are using the RESET button as an input switch.
 ;''
-;''  We set an LED, you can try setting the other LEDs. Do not forget those appropiate resistors
 ;''
 ;''************************************************************************
 ;''@author  EvanV
 ;''@licence GPL
 ;''@version 1.01
 ;''@date    31.12.2020
-;----- Configuration
 ;Chip Settings.
+;The will enable the reset switch to be an input.  This will NOT reset the chip now but the reset becomes a switch input but ONLY when LVP=off
+;EXTMCLR is MCLR Enable bit->If LVP = 0, MCLR pin is MCLR; If LVP = 1, RA3 pin function is MCLR
 ;' -------------------PORTA----------------
 ;' Bit#:  -7---6---5---4---3---2---1---0---
-;' IO:    ---------------------------------
+;' IO:   -----------------MCLE-SW-----ADC--
 ;'-----------------------------------------
 ;'
 ;' -------------------PORTB----------------
@@ -114,31 +115,70 @@ BASPROGRAMSTART:
 ;'
 ;' ------------------PORTC-----------------
 ;' Bit#:  -7---6---5---4---3---2---1---0---
-;' IO:    ----------------------------LED--
+;' IO:    ---------------LED--LED-LED LED--
 ;'-----------------------------------------
 ;'
+;Define constants to make things easier. We can reuse these at any time.
+;#DEFINE LEDPORT LATC
+;Dir     RC0         Out
+	bcf	TRISC,0,ACCESS
+;Dir     RC1         Out
+	bcf	TRISC,1,ACCESS
+;Dir     RC2         Out
+	bcf	TRISC,2,ACCESS
+;Dir     RC3         Out
+	bcf	TRISC,3,ACCESS
+;#DEFINE POTENTIOMETER PORTA.0
+;Dir     POTENTIOMETER In
+	bsf	TRISA,0,ACCESS
+;#DEFINE RSTButton     PORTA.3
+;Dir     RSTButton     In  'this is set automatically - so, you cannot set as an output
+	bsf	TRISA,3,ACCESS
 ;*****************************************************************************************************
 ;Main program commences here.. everything before this is setup for the board.
-;Dir PORTC.0 Out
-	bcf	TRISC,0,ACCESS
-;Do
+;Flash an LED to show a reset has happened
+;Repeat 10
+	movlw	10
+	movwf	SYSREPEATTEMP1,ACCESS
+SysRepeatLoop1:
+;RC1 = !RC1
+	clrf	SYSTEMP1,ACCESS
+	btfsc	PORTC,1,ACCESS
+	incf	SYSTEMP1,F,ACCESS
+	comf	SYSTEMP1,F,ACCESS
+	bcf	LATC,1,ACCESS
+	btfsc	SYSTEMP1,0,ACCESS
+	bsf	LATC,1,ACCESS
+;wait 100 ms
+	movlw	100
+	movwf	SYSWAITTEMPMS,ACCESS
+	clrf	SYSWAITTEMPMS_H,ACCESS
+	call	Delay_MS
+;End Repeat
+	decfsz	SYSREPEATTEMP1,F,ACCESS
+	bra	SysRepeatLoop1
+SysRepeatLoopEnd1:
+;Do Forever
 SysDoLoop_S1:
-;wait for 1 second
-;Wait 1 s
-	movlw	1
-	movwf	SYSWAITTEMPS,ACCESS
-	call	Delay_S
-;Set the port bit
-;PORTC.0 = 0
-	bcf	LATC,0,ACCESS
-;wait for 1 second
-;Wait 1 s
-	movlw	1
-	movwf	SYSWAITTEMPS,ACCESS
-	call	Delay_S
-;Set the port bit
-;PORTC.0 = 1
-	bsf	LATC,0,ACCESS
+;Wait 10 ms
+	movlw	10
+	movwf	SYSWAITTEMPMS,ACCESS
+	clrf	SYSWAITTEMPMS_H,ACCESS
+	call	Delay_MS
+;The reset line is always HIGH, so, we have to test when the line goes low.
+;If  RSTButton = 0 Then
+	btfsc	PORTA,3,ACCESS
+	bra	ELSE1_1
+;push button pressed
+;RC2 = 1
+	bsf	LATC,2,ACCESS
+;Else
+	bra	ENDIF1
+ELSE1_1:
+;RC2 = 0
+	bcf	LATC,2,ACCESS
+;End If
+ENDIF1:
 ;Loop
 	bra	SysDoLoop_S1
 SysDoLoop_E1:
@@ -165,19 +205,6 @@ DMS_INNER:
 	bra	DMS_START
 	decfsz	SYSWAITTEMPMS_H, F,ACCESS
 	bra	DMS_START
-	return
-
-;********************************************************************************
-
-Delay_S:
-DS_START:
-	movlw	232
-	movwf	SYSWAITTEMPMS,ACCESS
-	movlw	3
-	movwf	SYSWAITTEMPMS_H,ACCESS
-	call	Delay_MS
-	decfsz	SYSWAITTEMPS, F,ACCESS
-	bra	DS_START
 	return
 
 ;********************************************************************************

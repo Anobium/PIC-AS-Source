@@ -85,15 +85,10 @@ BASPROGRAMSTART:
 
 ;Start of the main program
 ;''
-;''******************************************************************
+;''  This lesson will introduce bit-oriented NOT operations to change the state for LEDs.
 ;''
-;''  One way to create a delay is to spend time decrementing a value. In Great Cow BASIC the timing
-;''  can be accurately programmed since the user has control on how the
-;''  time delays are executed.
+;''  LEDs change at a rate of 1.0s, the bit are set ON or equal to 1 when the LED is turned on!
 ;''
-;''  The LED is attached to PORTC.0 via a suitable resistor to 0v.  Another LED  is also attached to PORTC.0 via a suitable resistor to 0v.
-;''
-;''  We set an LED, you can try setting the other LEDs. Do not forget those appropiate resistors
 ;''
 ;''************************************************************************
 ;''@author  EvanV
@@ -114,31 +109,61 @@ BASPROGRAMSTART:
 ;'
 ;' ------------------PORTC-----------------
 ;' Bit#:  -7---6---5---4---3---2---1---0---
-;' IO:    ----------------------------LED--
+;' IO:    ---------------LED--LED-LED-LED--
 ;'-----------------------------------------
 ;'
-;*****************************************************************************************************
-;Main program commences here.. everything before this is setup for the board.
-;Dir PORTC.0 Out
+;Define a constant to make things easier. We can reuse these at any time.
+;#DEFINE LEDPORT LATC
+;Dir     RC0         Out
 	bcf	TRISC,0,ACCESS
+;Dir     RC1         Out
+	bcf	TRISC,1,ACCESS
+;Dir     RC2         Out
+	bcf	TRISC,2,ACCESS
+;Dir     RC3         Out
+	bcf	TRISC,3,ACCESS
+;Set the initial LED states - change to suit your configuration
+;#DEFINE LEDSTATEMACRO RC0 = 0: RC1 = 0: RC2 = 0: RC3 = 1
+;You may need change to the LEDMASK to suit your port/configuration.  We use a macro as re reuse this statement more that once.
+;#DEFINE LEDMASK 0B00001111
+;LEDSTATEMACRO
+	bcf	LATC,0,ACCESS
+	bcf	LATC,1,ACCESS
+	bcf	LATC,2,ACCESS
+	bsf	LATC,3,ACCESS
+;Wait 1 s
+	movlw	1
+	movwf	SYSWAITTEMPS,ACCESS
+	call	Delay_S
 ;Do
 SysDoLoop_S1:
-;wait for 1 second
+;Wait for milliseconds
 ;Wait 1 s
 	movlw	1
 	movwf	SYSWAITTEMPS,ACCESS
 	call	Delay_S
-;Set the port bit
-;PORTC.0 = 0
+;Rotate the LEDs.  We are only interested in the four LEDs so we mask the other bits.
+;Set C Off
+	bcf	STATUS,0,ACCESS
+;and shift the contents of LEDState
+;Rotate LEDPORT Right
+	rrcf	LATC,F,ACCESS
+;If the C ( the Caryy Flag) = 1 then the sequence has completed, then set the initial state again, the same operation as the starting LED.
+;If C = 1 Then
+	btfss	STATUS,0,ACCESS
+	bra	ENDIF1
+;Set the initial LED states
+;LEDSTATEMACRO
 	bcf	LATC,0,ACCESS
-;wait for 1 second
-;Wait 1 s
-	movlw	1
-	movwf	SYSWAITTEMPS,ACCESS
-	call	Delay_S
-;Set the port bit
-;PORTC.0 = 1
-	bsf	LATC,0,ACCESS
+	bcf	LATC,1,ACCESS
+	bcf	LATC,2,ACCESS
+	bsf	LATC,3,ACCESS
+;Mask off the other bits
+;LEDPORT = LEDPORT AND LEDMASK
+	movlw	15
+	andwf	LATC,F,ACCESS
+;End If
+ENDIF1:
 ;Loop
 	bra	SysDoLoop_S1
 SysDoLoop_E1:

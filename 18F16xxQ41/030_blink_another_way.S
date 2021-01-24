@@ -61,9 +61,9 @@
 ;Set aside RAM memory locations for variables. All variables are global.
  DELAYTEMP                        EQU 1280
  DELAYTEMP2                       EQU 1281
+ SYSTEMP1                         EQU 1284
  SYSWAITTEMPMS                    EQU 1282
  SYSWAITTEMPMS_H                  EQU 1283
- SYSWAITTEMPS                     EQU 1284
 
 ;********************************************************************************
 
@@ -85,15 +85,14 @@ BASPROGRAMSTART:
 
 ;Start of the main program
 ;''
-;''******************************************************************
+;''  One way to create a delay is to spend time decrementing to a value, but Great Cow BASIC  has timers built in.
+;''  The demonstration will use a Great Cow BASIC method to toggle the LED using CONSTANTS rather than the port address.
 ;''
-;''  One way to create a delay is to spend time decrementing a value. In Great Cow BASIC the timing
-;''  can be accurately programmed since the user has control on how the
-;''  time delays are executed.
+;''  LED blinks at a rate of approximately 1.0 seconds, we use CONSTANTS to refer to the LED port.
 ;''
-;''  The LED is attached to PORTC.0 via a suitable resistor to 0v.  Another LED  is also attached to PORTC.0 via a suitable resistor to 0v.
+;''  The LED is attached to portc.1 via a suitable resistor to 0v.
 ;''
-;''  We set an LED, you can try setting the other LEDs. Do not forget those appropiate resistors
+;''  We set one of the LEDs, you can try setting the other LED..  do not forget those appropiate resistors
 ;''
 ;''************************************************************************
 ;''@author  EvanV
@@ -117,27 +116,30 @@ BASPROGRAMSTART:
 ;' IO:    ----------------------------LED--
 ;'-----------------------------------------
 ;'
+;Define constants to make things easier. We can reuse a constant at any time.
+;#DEFINE LEDD1 PORTC.0
 ;*****************************************************************************************************
 ;Main program commences here.. everything before this is setup for the board.
-;Dir PORTC.0 Out
+;Use a constant
+;Dir LEDD1 Out
 	bcf	TRISC,0,ACCESS
 ;Do
 SysDoLoop_S1:
-;wait for 1 second
-;Wait 1 s
-	movlw	1
-	movwf	SYSWAITTEMPS,ACCESS
-	call	Delay_S
-;Set the port bit
-;PORTC.0 = 0
+;wait for 1 second which is 1000 ms
+;Wait 1000 ms
+	movlw	232
+	movwf	SYSWAITTEMPMS,ACCESS
+	movlw	3
+	movwf	SYSWAITTEMPMS_H,ACCESS
+	call	Delay_MS
+;Set the port bit to NOT value from previous state but using the ! as an alternative to NOT
+;LEDD1 = !LEDD1
+	clrf	SYSTEMP1,ACCESS
+	btfsc	PORTC,0,ACCESS
+	incf	SYSTEMP1,F,ACCESS
+	comf	SYSTEMP1,F,ACCESS
 	bcf	LATC,0,ACCESS
-;wait for 1 second
-;Wait 1 s
-	movlw	1
-	movwf	SYSWAITTEMPS,ACCESS
-	call	Delay_S
-;Set the port bit
-;PORTC.0 = 1
+	btfsc	SYSTEMP1,0,ACCESS
 	bsf	LATC,0,ACCESS
 ;Loop
 	bra	SysDoLoop_S1
@@ -165,19 +167,6 @@ DMS_INNER:
 	bra	DMS_START
 	decfsz	SYSWAITTEMPMS_H, F,ACCESS
 	bra	DMS_START
-	return
-
-;********************************************************************************
-
-Delay_S:
-DS_START:
-	movlw	232
-	movwf	SYSWAITTEMPMS,ACCESS
-	movlw	3
-	movwf	SYSWAITTEMPMS_H,ACCESS
-	call	Delay_MS
-	decfsz	SYSWAITTEMPS, F,ACCESS
-	bra	DS_START
 	return
 
 ;********************************************************************************

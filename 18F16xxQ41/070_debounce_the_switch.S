@@ -59,11 +59,14 @@
 ;********************************************************************************
 
 ;Set aside RAM memory locations for variables. All variables are global.
+ CURRENTSWITCHSTATE               EQU 1284
  DELAYTEMP                        EQU 1280
  DELAYTEMP2                       EQU 1281
+ FUNCKEYPRESSED                   EQU 1285
+ LASTSWITCHSTATE                  EQU 1286
+ SYSTEMP1                         EQU 1287
  SYSWAITTEMPMS                    EQU 1282
  SYSWAITTEMPMS_H                  EQU 1283
- SYSWAITTEMPS                     EQU 1284
 
 ;********************************************************************************
 
@@ -85,15 +88,13 @@ BASPROGRAMSTART:
 
 ;Start of the main program
 ;''
-;''******************************************************************
+;'' This demonstration uses a simple software routine to avoid the initial noise on the switch
+;'' pin. The code will inspect the switch status, but should overcome most of the noise from a switch.
 ;''
-;''  One way to create a delay is to spend time decrementing a value. In Great Cow BASIC the timing
-;''  can be accurately programmed since the user has control on how the
-;''  time delays are executed.
+;'' Some switches are worse than others.
 ;''
-;''  The LED is attached to PORTC.0 via a suitable resistor to 0v.  Another LED  is also attached to PORTC.0 via a suitable resistor to 0v.
+;'' When the switch is held down and released, one LED will toggle.
 ;''
-;''  We set an LED, you can try setting the other LEDs. Do not forget those appropiate resistors
 ;''
 ;''************************************************************************
 ;''@author  EvanV
@@ -104,7 +105,7 @@ BASPROGRAMSTART:
 ;Chip Settings.
 ;' -------------------PORTA----------------
 ;' Bit#:  -7---6---5---4---3---2---1---0---
-;' IO:    ---------------------------------
+;' IO:   -----------------SW----------ADC--
 ;'-----------------------------------------
 ;'
 ;' -------------------PORTB----------------
@@ -114,31 +115,77 @@ BASPROGRAMSTART:
 ;'
 ;' ------------------PORTC-----------------
 ;' Bit#:  -7---6---5---4---3---2---1---0---
-;' IO:    ----------------------------LED--
+;' IO:    ---------------LED--LED-LED LED--
 ;'-----------------------------------------
 ;'
+;Define constants to make things easier. We can reuse these at any time.
+;#DEFINE LEDPORT LATC
+;Dir     RC0         Out
+	bcf	TRISC,0,ACCESS
+;Dir     RC1         Out
+	bcf	TRISC,1,ACCESS
+;Dir     RC2         Out
+	bcf	TRISC,2,ACCESS
+;Dir     RC3         Out
+	bcf	TRISC,3,ACCESS
+;#DEFINE POTENTIOMETER PORTA.0
+;Dir     POTENTIOMETER In
+	bsf	TRISA,0,ACCESS
+;#DEFINE SWITCHIN      PORTA.3
+;Dir     SWITCHIN      In
+	bsf	TRISA,3,ACCESS
+;#DEFINE DOWN          0
 ;*****************************************************************************************************
 ;Main program commences here.. everything before this is setup for the board.
-;Dir PORTC.0 Out
-	bcf	TRISC,0,ACCESS
-;Do
+;Debouncing a switch
+;Do Forever
 SysDoLoop_S1:
-;wait for 1 second
-;Wait 1 s
-	movlw	1
-	movwf	SYSWAITTEMPS,ACCESS
-	call	Delay_S
-;Set the port bit
-;PORTC.0 = 0
+;Wait 10 ms
+	movlw	10
+	movwf	SYSWAITTEMPMS,ACCESS
+	clrf	SYSWAITTEMPMS_H,ACCESS
+	call	Delay_MS
+;keyPressed is a Function that returns the state
+;If  funcKeyPressed() = TRUE Then
+	call	FN_FUNCKEYPRESSED
+	incf	FUNCKEYPRESSED,W,ACCESS
+	btfss	STATUS,2,ACCESS
+	bra	ENDIF1
+;push button pressed
+;RC0 = !RC0
+	clrf	SYSTEMP1,ACCESS
+	btfsc	PORTC,0,ACCESS
+	incf	SYSTEMP1,F,ACCESS
+	comf	SYSTEMP1,F,ACCESS
 	bcf	LATC,0,ACCESS
-;wait for 1 second
-;Wait 1 s
-	movlw	1
-	movwf	SYSWAITTEMPS,ACCESS
-	call	Delay_S
-;Set the port bit
-;PORTC.0 = 1
+	btfsc	SYSTEMP1,0,ACCESS
 	bsf	LATC,0,ACCESS
+;RC1 = !RC1
+	clrf	SYSTEMP1,ACCESS
+	btfsc	PORTC,1,ACCESS
+	incf	SYSTEMP1,F,ACCESS
+	comf	SYSTEMP1,F,ACCESS
+	bcf	LATC,1,ACCESS
+	btfsc	SYSTEMP1,0,ACCESS
+	bsf	LATC,1,ACCESS
+;RC2 = !RC2
+	clrf	SYSTEMP1,ACCESS
+	btfsc	PORTC,2,ACCESS
+	incf	SYSTEMP1,F,ACCESS
+	comf	SYSTEMP1,F,ACCESS
+	bcf	LATC,2,ACCESS
+	btfsc	SYSTEMP1,0,ACCESS
+	bsf	LATC,2,ACCESS
+;RC3 = !RC3
+	clrf	SYSTEMP1,ACCESS
+	btfsc	PORTC,3,ACCESS
+	incf	SYSTEMP1,F,ACCESS
+	comf	SYSTEMP1,F,ACCESS
+	bcf	LATC,3,ACCESS
+	btfsc	SYSTEMP1,0,ACCESS
+	bsf	LATC,3,ACCESS
+;End If
+ENDIF1:
 ;Loop
 	bra	SysDoLoop_S1
 SysDoLoop_E1:
@@ -169,15 +216,43 @@ DMS_INNER:
 
 ;********************************************************************************
 
-Delay_S:
-DS_START:
-	movlw	232
+;Source: 070_debounce_the_switch.gcb (83)
+FN_FUNCKEYPRESSED:
+;Dim CurrentSwitchState As Byte
+;Dim LastSwitchState As Byte
+;wait 1 ms
+	movlw	1
 	movwf	SYSWAITTEMPMS,ACCESS
-	movlw	3
-	movwf	SYSWAITTEMPMS_H,ACCESS
+	clrf	SYSWAITTEMPMS_H,ACCESS
 	call	Delay_MS
-	decfsz	SYSWAITTEMPS, F,ACCESS
-	bra	DS_START
+;If ( SWITCHIN = DOWN ) Then
+	btfsc	PORTA,3,ACCESS
+	bra	ELSE10_1
+;CurrentSwitchState = TRUE
+	setf	CURRENTSWITCHSTATE,ACCESS
+;Else
+	bra	ENDIF10
+ELSE10_1:
+;CurrentSwitchState = FALSE
+	clrf	CURRENTSWITCHSTATE,ACCESS
+;End If
+ENDIF10:
+;If (CurrentSwitchState <> LastSwitchState) Then
+	movf	LASTSWITCHSTATE,W,ACCESS
+	subwf	CURRENTSWITCHSTATE,W,ACCESS
+	btfsc	STATUS,2,ACCESS
+	bra	ELSE11_1
+;LastSwitchState = CurrentSwitchState
+	movff	CURRENTSWITCHSTATE,LASTSWITCHSTATE
+;funcKeyPressed =  CurrentSwitchState
+	movff	CURRENTSWITCHSTATE,FUNCKEYPRESSED
+;Else
+	bra	ENDIF11
+ELSE11_1:
+;funcKeyPressed = FALSE
+	clrf	FUNCKEYPRESSED,ACCESS
+;End If
+ENDIF11:
 	return
 
 ;********************************************************************************
