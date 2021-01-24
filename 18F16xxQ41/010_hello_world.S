@@ -17,6 +17,7 @@
 ;These are therefore the same as MPASM
 #define BANKED b
 #define ACCESS a
+#define upper low highword
 
 ;********************************************************************************
 ;Explicit CONFIG

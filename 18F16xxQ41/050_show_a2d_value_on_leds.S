@@ -17,6 +17,7 @@
 ;These are therefore the same as MPASM
 #define BANKED b
 #define ACCESS a
+#define upper low highword
 
 ;********************************************************************************
 ;Explicit CONFIG
@@ -59,6 +60,7 @@
 ;********************************************************************************
 
 ;Set aside RAM memory locations for variables. All variables are global.
+PSECT UDATA
  ADCVAL                           EQU 1284
  ADREADPORT                       EQU 1286
  DELAYTEMP                        EQU 1280

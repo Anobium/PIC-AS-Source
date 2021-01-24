@@ -1,4 +1,6 @@
-;Program compiled for (0.98.<<>> 2021-01-20 (Windows 64 bit)) for Microchip PIC-AS v2.31
+;Program compiled by Great Cow BASIC (0.98.<<>> 2021-01-20 (Windows 64 bit)) for Microchip PIC-AS
+;Need help? See the GCBASIC forums at http://sourceforge.net/projects/gcbasic/forums,
+;check the documentation or email evan+picas at anobium  dot co dot uk.
 
 ;********************************************************************************
 
@@ -15,6 +17,7 @@
 ;These are therefore the same as MPASM
 #define BANKED b
 #define ACCESS a
+#define upper low highword
 
 ;********************************************************************************
 ;Explicit CONFIG
@@ -57,6 +60,7 @@
 ;********************************************************************************
 
 ;Set aside RAM memory locations for variables. All variables are global.
+PSECT UDATA
  ADREADPORT                       EQU 1293
  CHECK_SWITCH                     EQU 1294
  COMPORT                          EQU 1295
