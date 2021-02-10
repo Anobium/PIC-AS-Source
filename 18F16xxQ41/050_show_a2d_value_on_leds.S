@@ -1,4 +1,4 @@
-;Program compiled by Great Cow BASIC (0.98.<<>> 2021-01-20 (Windows 64 bit)) for Microchip PIC-AS
+;Program compiled by Great Cow BASIC (0.98.<<>> 2021-02-09 (Windows 64 bit)) for Microchip PIC-AS
 ;Need help? See the GCBASIC forums at http://sourceforge.net/projects/gcbasic/forums,
 ;check the documentation or email evan+picas at anobium  dot co dot uk.
 
@@ -6,9 +6,14 @@
 
 
 ;Set up the assembler options (Chip type, clock source, other bits and pieces)
- PROCESSOR   18F16Q41
+;PROCESSOR   18F16Q41
  PAGEWIDTH   132
  RADIX       DEC
+ TITLE       "D:\GCB@Syn39\GreatCowBasic\Demos\vendor_boards\microchip_low_pin_count_demo_board\pickit2_board\18f16q41\050_show_a2d_value_on_leds.S"
+ SUBTITLE    "02-10-2021"
+
+; Reverse lookup file
+; C:\Program Files\Microchip\xc8\v2.31\pic\include\proc\pic18f16q41.inc
 
  #include <xc.inc>
 
@@ -17,13 +22,14 @@
 ;These are therefore the same as MPASM
 #define BANKED b
 #define ACCESS a
-#define upper low highword
+#define UPPER low highword
 
 ;********************************************************************************
 ;Explicit CONFIG
  CONFIG  CP = OFF
  CONFIG  WRTSAF = OFF
  CONFIG  WRTD = OFF
+ CONFIG  WRTB = OFF
  CONFIG  WDTE = OFF
  CONFIG  XINST = OFF
  CONFIG  LVP = OFF
@@ -46,54 +52,52 @@
  CONFIG  LPBOREN=ON
  CONFIG  PPS1WAY=OFF
  CONFIG  PR1WAY=OFF
- CONFIG  PWRTS=1
+ CONFIG  PWRTS=PWRT_1
  CONFIG  SAFEN=ON
  CONFIG  STVREN=OFF
  CONFIG  WDTCCS=LFINTOSC
- CONFIG  WDTCPS=0
- CONFIG  WDTCWS=0
+ CONFIG  WDTCPS=WDTCPS_0
+ CONFIG  WDTCWS=WDTCWS_0
  CONFIG  WRTAPP=ON
- CONFIG  WRTB=ON
  CONFIG  WRTC=ON
  CONFIG  ZCD=ON
 
 ;********************************************************************************
 
 ;Set aside RAM memory locations for variables. All variables are global.
-PSECT UDATA
- ADCVAL                           EQU 1284
- ADREADPORT                       EQU 1286
- DELAYTEMP                        EQU 1280
- DELAYTEMP2                       EQU 1281
- READAD                           EQU 1287
- SYSWAITTEMP10US                  EQU 1285
- SYSWAITTEMPMS                    EQU 1282
- SYSWAITTEMPMS_H                  EQU 1283
+ ADCVAL                           EQU 1284                    ; 0X504
+ ADREADPORT                       EQU 1286                    ; 0X506
+ DELAYTEMP                        EQU 1280                    ; 0X500
+ DELAYTEMP2                       EQU 1281                    ; 0X501
+ READAD                           EQU 1287                    ; 0X507
+ SYSWAITTEMP10US                  EQU 1285                    ; 0X505
+ SYSWAITTEMPMS                    EQU 1282                    ; 0X502
+ SYSWAITTEMPMS_H                  EQU 1283                    ; 0X503
 
 ;********************************************************************************
 
-;Alias variables
+;ALIAS VARIABLES
  SYSREADADBYTE                    EQU 1287
 
 ;********************************************************************************
 
- PSECT   resetVec,class=CODE
- resetVec:
-;Vectors
+ PSECT   RESETVEC,delta=1, abs
+ RESETVEC:
+;VECTORS
 	ORG	0
-	goto	BASPROGRAMSTART
+	GOTO	BASPROGRAMSTART
 	ORG	8
-	retfie
+	RETFIE
 
 ;********************************************************************************
 
-;Start of program memory page 0
+;START OF PROGRAM MEMORY PAGE 0
 	ORG	12
 BASPROGRAMSTART:
-;Call initialisation routines
-	call	INITSYS
+;CALL INITIALISATION ROUTINES
+	RCALL	INITSYS
 
-;Start of the main program
+;START OF THE MAIN PROGRAM
 ;''
 ;'' This shows how to read the A2D converter and display the a proportioanal value on the LEDs.
 ;'' The pot on the board varies the voltage coming in on the microcontroller.
@@ -134,114 +138,142 @@ BASPROGRAMSTART:
 ;#DEFINE LEDPORT LATC
 ;#DEFINE POTENTIOMETER RA0
 ;Dir     RC0         Out
-	bcf	TRISC,0,ACCESS
+	BCF	TRISC,0,ACCESS
 ;Dir     RC1         Out
-	bcf	TRISC,1,ACCESS
+	BCF	TRISC,1,ACCESS
 ;Dir     RC2         Out
-	bcf	TRISC,2,ACCESS
+	BCF	TRISC,2,ACCESS
 ;Dir     RC3         Out
-	bcf	TRISC,3,ACCESS
+	BCF	TRISC,3,ACCESS
 ;This is the PORTA.0 port
 ;Dir     POTENTIOMETER In
-	bsf	TRISA,0,ACCESS
+	BSF	TRISA,0,ACCESS
 ;*****************************************************************************************************
 ;Main program commences here.. everything before this is setup for the board.
 ;Dim adcVal As Byte
 ;Do
-SysDoLoop_S1:
+SYSDOLOOP_S1:
 ;adcVal =  ReadAD ( AN0 )
-	clrf	ADREADPORT,ACCESS
-	call	FN_READAD2
-	movff	SYSREADADBYTE,ADCVAL
+	CLRF	ADREADPORT,ACCESS
+	RCALL	FN_READAD4
+	MOVFF	SYSREADADBYTE,ADCVAL
 ;Select Case adcVal
 ;Case 0 to 49
-SysSelect1Case1:
-	movlw	0
-	subwf	ADCVAL,W,ACCESS
-	btfss	STATUS,0,ACCESS
-	bra	SysSelect1Case2
-	movf	ADCVAL,W,ACCESS
-	sublw	49
-	btfss	STATUS,0,ACCESS
-	bra	SysSelect1Case2
+SYSSELECT1CASE1:
+	MOVLW	0
+	SUBWF	ADCVAL,W,ACCESS
+;A8: ASM Source was:  BTFSS STATUS, C,ACCESS
+	BTFSS	STATUS,0,ACCESS
+	BRA	SYSSELECT1CASE2
+	MOVF	ADCVAL,W,ACCESS
+	SUBLW	49
+;A8: ASM Source was:  BTFSS STATUS, C,ACCESS
+	BTFSS	STATUS,0,ACCESS
+	BRA	SYSSELECT1CASE2
 ;RC0 = 0
-	bcf	LATC,0,ACCESS
+;A8: ASM Source was:  BCF LATC,RC0,ACCESS
+	BCF	LATC,0,ACCESS
 ;RC1 = 0
-	bcf	LATC,1,ACCESS
+;A8: ASM Source was:  BCF LATC,RC1,ACCESS
+	BCF	LATC,1,ACCESS
 ;RC2 = 0
-	bcf	LATC,2,ACCESS
+;A8: ASM Source was:  BCF LATC,RC2,ACCESS
+	BCF	LATC,2,ACCESS
 ;RC3 = 0
-	bcf	LATC,3,ACCESS
+;A8: ASM Source was:  BCF LATC,RC3,ACCESS
+	BCF	LATC,3,ACCESS
 ;Case 50 to 99
-	bra	SysSelectEnd1
-SysSelect1Case2:
-	movlw	50
-	subwf	ADCVAL,W,ACCESS
-	btfss	STATUS,0,ACCESS
-	bra	SysSelect1Case3
-	movf	ADCVAL,W,ACCESS
-	sublw	99
-	btfss	STATUS,0,ACCESS
-	bra	SysSelect1Case3
+	BRA	SYSSELECTEND1
+SYSSELECT1CASE2:
+	MOVLW	50
+	SUBWF	ADCVAL,W,ACCESS
+;A8: ASM Source was:  BTFSS STATUS, C,ACCESS
+	BTFSS	STATUS,0,ACCESS
+	BRA	SYSSELECT1CASE3
+	MOVF	ADCVAL,W,ACCESS
+	SUBLW	99
+;A8: ASM Source was:  BTFSS STATUS, C,ACCESS
+	BTFSS	STATUS,0,ACCESS
+	BRA	SYSSELECT1CASE3
 ;RC0 = 1
-	bsf	LATC,0,ACCESS
+;A8: ASM Source was:  BSF LATC,RC0,ACCESS
+	BSF	LATC,0,ACCESS
 ;RC1 = 0
-	bcf	LATC,1,ACCESS
+;A8: ASM Source was:  BCF LATC,RC1,ACCESS
+	BCF	LATC,1,ACCESS
 ;RC2 = 0
-	bcf	LATC,2,ACCESS
+;A8: ASM Source was:  BCF LATC,RC2,ACCESS
+	BCF	LATC,2,ACCESS
 ;RC3 = 0
-	bcf	LATC,3,ACCESS
+;A8: ASM Source was:  BCF LATC,RC3,ACCESS
+	BCF	LATC,3,ACCESS
 ;Case 100 to 149
-	bra	SysSelectEnd1
-SysSelect1Case3:
-	movlw	100
-	subwf	ADCVAL,W,ACCESS
-	btfss	STATUS,0,ACCESS
-	bra	SysSelect1Case4
-	movf	ADCVAL,W,ACCESS
-	sublw	149
-	btfss	STATUS,0,ACCESS
-	bra	SysSelect1Case4
+	BRA	SYSSELECTEND1
+SYSSELECT1CASE3:
+	MOVLW	100
+	SUBWF	ADCVAL,W,ACCESS
+;A8: ASM Source was:  BTFSS STATUS, C,ACCESS
+	BTFSS	STATUS,0,ACCESS
+	BRA	SYSSELECT1CASE4
+	MOVF	ADCVAL,W,ACCESS
+	SUBLW	149
+;A8: ASM Source was:  BTFSS STATUS, C,ACCESS
+	BTFSS	STATUS,0,ACCESS
+	BRA	SYSSELECT1CASE4
 ;RC0 = 1
-	bsf	LATC,0,ACCESS
+;A8: ASM Source was:  BSF LATC,RC0,ACCESS
+	BSF	LATC,0,ACCESS
 ;RC1 = 1
-	bsf	LATC,1,ACCESS
+;A8: ASM Source was:  BSF LATC,RC1,ACCESS
+	BSF	LATC,1,ACCESS
 ;RC2 = 0
-	bcf	LATC,2,ACCESS
+;A8: ASM Source was:  BCF LATC,RC2,ACCESS
+	BCF	LATC,2,ACCESS
 ;RC3 = 0
-	bcf	LATC,3,ACCESS
+;A8: ASM Source was:  BCF LATC,RC3,ACCESS
+	BCF	LATC,3,ACCESS
 ;Case 150 to 200
-	bra	SysSelectEnd1
-SysSelect1Case4:
-	movlw	150
-	subwf	ADCVAL,W,ACCESS
-	btfss	STATUS,0,ACCESS
-	bra	SysSelect1Case5
-	movf	ADCVAL,W,ACCESS
-	sublw	200
-	btfss	STATUS,0,ACCESS
-	bra	SysSelect1Case5
+	BRA	SYSSELECTEND1
+SYSSELECT1CASE4:
+	MOVLW	150
+	SUBWF	ADCVAL,W,ACCESS
+;A8: ASM Source was:  BTFSS STATUS, C,ACCESS
+	BTFSS	STATUS,0,ACCESS
+	BRA	SYSSELECT1CASE5
+	MOVF	ADCVAL,W,ACCESS
+	SUBLW	200
+;A8: ASM Source was:  BTFSS STATUS, C,ACCESS
+	BTFSS	STATUS,0,ACCESS
+	BRA	SYSSELECT1CASE5
 ;RC0 = 1
-	bsf	LATC,0,ACCESS
+;A8: ASM Source was:  BSF LATC,RC0,ACCESS
+	BSF	LATC,0,ACCESS
 ;RC1 = 1
-	bsf	LATC,1,ACCESS
+;A8: ASM Source was:  BSF LATC,RC1,ACCESS
+	BSF	LATC,1,ACCESS
 ;RC2 = 1
-	bsf	LATC,2,ACCESS
+;A8: ASM Source was:  BSF LATC,RC2,ACCESS
+	BSF	LATC,2,ACCESS
 ;RC3 = 0
-	bcf	LATC,3,ACCESS
+;A8: ASM Source was:  BCF LATC,RC3,ACCESS
+	BCF	LATC,3,ACCESS
 ;Case Else
-	bra	SysSelectEnd1
-SysSelect1Case5:
+	BRA	SYSSELECTEND1
+SYSSELECT1CASE5:
 ;RC0 = 1
-	bsf	LATC,0,ACCESS
+;A8: ASM Source was:  BSF LATC,RC0,ACCESS
+	BSF	LATC,0,ACCESS
 ;RC1 = 1
-	bsf	LATC,1,ACCESS
+;A8: ASM Source was:  BSF LATC,RC1,ACCESS
+	BSF	LATC,1,ACCESS
 ;RC2 = 1
-	bsf	LATC,2,ACCESS
+;A8: ASM Source was:  BSF LATC,RC2,ACCESS
+	BSF	LATC,2,ACCESS
 ;RC3 = 1
-	bsf	LATC,3,ACCESS
+;A8: ASM Source was:  BSF LATC,RC3,ACCESS
+	BSF	LATC,3,ACCESS
 ;End Select
-SysSelectEnd1:
+SYSSELECTEND1:
 ;Or, another way
 ;
 ;If adcVal < 49 then
@@ -275,422 +307,465 @@ SysSelectEnd1:
 ;RC4 = 1
 ;End if
 ;wait 100 ms
-	movlw	100
-	movwf	SYSWAITTEMPMS,ACCESS
-	clrf	SYSWAITTEMPMS_H,ACCESS
-	call	Delay_MS
+	MOVLW	100
+	MOVWF	SYSWAITTEMPMS,ACCESS
+	CLRF	SYSWAITTEMPMS_H,ACCESS
+	RCALL	DELAY_MS
 ;Loop
-	bra	SysDoLoop_S1
-SysDoLoop_E1:
+	BRA	SYSDOLOOP_S1
+SYSDOLOOP_E1:
 BASPROGRAMEND:
-	sleep
-	bra	BASPROGRAMEND
+	SLEEP
+	BRA	BASPROGRAMEND
 
 ;********************************************************************************
 
-Delay_10US:
+DELAY_10US:
 D10US_START:
-	movlw	52
-	movwf	DELAYTEMP,ACCESS
-DelayUS0:
-	decfsz	DELAYTEMP,F,ACCESS
-	bra	DelayUS0
-	decfsz	SYSWAITTEMP10US, F,ACCESS
-	bra	D10US_START
-	return
+	MOVLW	52
+	MOVWF	DELAYTEMP,ACCESS
+DELAYUS0:
+	DECFSZ	DELAYTEMP,F,ACCESS
+	BRA	DELAYUS0
+	DECFSZ	SYSWAITTEMP10US, F,ACCESS
+	BRA	D10US_START
+	RETURN
 
 ;********************************************************************************
 
-Delay_MS:
-	incf	SYSWAITTEMPMS_H, F,ACCESS
+DELAY_MS:
+	INCF	SYSWAITTEMPMS_H, F,ACCESS
 DMS_START:
-	movlw	129
-	movwf	DELAYTEMP2,ACCESS
+	MOVLW	129
+	MOVWF	DELAYTEMP2,ACCESS
 DMS_OUTER:
-	movlw	40
-	movwf	DELAYTEMP,ACCESS
+	MOVLW	40
+	MOVWF	DELAYTEMP,ACCESS
 DMS_INNER:
-	decfsz	DELAYTEMP, F,ACCESS
-	bra	DMS_INNER
-	decfsz	DELAYTEMP2, F,ACCESS
-	bra	DMS_OUTER
-	decfsz	SYSWAITTEMPMS, F,ACCESS
-	bra	DMS_START
-	decfsz	SYSWAITTEMPMS_H, F,ACCESS
-	bra	DMS_START
-	return
+	DECFSZ	DELAYTEMP, F,ACCESS
+	BRA	DMS_INNER
+	DECFSZ	DELAYTEMP2, F,ACCESS
+	BRA	DMS_OUTER
+	DECFSZ	SYSWAITTEMPMS, F,ACCESS
+	BRA	DMS_START
+	DECFSZ	SYSWAITTEMPMS_H, F,ACCESS
+	BRA	DMS_START
+	RETURN
 
 ;********************************************************************************
 
-;Source: system.h (127)
+;SOURCE: SYSTEM.H (129)
 INITSYS:
 ;asm showdebug This code block sets the internal oscillator to ChipMHz
 ;asm showdebug Default settings for microcontrollers with _OSCCON1_
 ;Default OSCCON1 typically, NOSC HFINTOSC; NDIV 1 - Common as this simply sets the HFINTOSC
 ;OSCCON1 = 0x60
-	movlw	96
-	movwf	OSCCON1,BANKED
+	MOVLW	96
+	MOVWF	OSCCON1,BANKED
 ;Default value typically, CSWHOLD may proceed; SOSCPWR Low power
 ;OSCCON3 = 0x00
-	clrf	OSCCON3,BANKED
+	CLRF	OSCCON3,BANKED
 ;Default value typically, MFOEN disabled; LFOEN disabled; ADOEN disabled; SOSCEN disabled; EXTOEN disabled; HFOEN disabled
 ;OSCEN = 0x00
-	clrf	OSCEN,BANKED
+	CLRF	OSCEN,BANKED
 ;Default value
 ;OSCTUNE = 0x00
-	clrf	OSCTUNE,BANKED
+	CLRF	OSCTUNE,BANKED
 ;asm showdebug The MCU is a chip family ChipFamily
 ;Section supports many MCUs, 18FxxK40, 18FxxK42 etc that have NDIV3 bit
 ;asm showdebug OSCCON type is 101
 ;Clear NDIV3:0
 ;NDIV3 = 0
-	bcf	OSCCON1,3,BANKED
+;A8: ASM Source was:  BCF OSCCON1,NDIV3,BANKED
+	BCF	OSCCON1,3,BANKED
 ;NDIV2 = 0
-	bcf	OSCCON1,2,BANKED
+;A8: ASM Source was:  BCF OSCCON1,NDIV2,BANKED
+	BCF	OSCCON1,2,BANKED
 ;NDIV1 = 0
-	bcf	OSCCON1,1,BANKED
+;A8: ASM Source was:  BCF OSCCON1,NDIV1,BANKED
+	BCF	OSCCON1,1,BANKED
 ;NDIV0 = 0
-	bcf	OSCCON1,0,BANKED
+;A8: ASM Source was:  BCF OSCCON1,NDIV0,BANKED
+	BCF	OSCCON1,0,BANKED
 ;OSCFRQ = 0b00001000  '64mhz
-	movlw	8
-	movwf	OSCFRQ,BANKED
+	MOVLW	8
+	MOVWF	OSCFRQ,BANKED
 ;asm showdebug _Complete_the_chip_setup_of_BSR,ADCs,ANSEL_and_other_key_setup_registers_or_register_bits
 ;Clear BSR on ChipFamily16 MCUs
 ;BSR = 0
-	clrf	BSR,ACCESS
+	CLRF	BSR,ACCESS
 ;Clear TBLPTRU on MCUs with this bit as this must be zero
 ;TBLPTRU = 0
-	clrf	TBLPTRU,ACCESS
+	CLRF	TBLPTRU,ACCESS
 ;Ensure all ports are set for digital I/O and, turn off A/D
 ;SET ADFM OFF
-	banksel	ADCON0
-	bcf	ADCON0,2,BANKED
+BANKSEL	ADCON0
+;A8: ASM Source was:  BCF ADCON0,ADFM0,BANKED
+	BCF	ADCON0,2,BANKED
 ;Switch off A/D Var(ADCON0)
 ;SET ADCON0.ADON OFF
-	bcf	ADCON0,7,BANKED
+;A8: ASM Source was:  BCF ADCON0,ADON,BANKED
+	BCF	ADCON0,7,BANKED
 ;ANSELA = 0
-	banksel	ANSELA
-	clrf	ANSELA,BANKED
+BANKSEL	ANSELA
+	CLRF	ANSELA,BANKED
 ;ANSELB = 0
-	clrf	ANSELB,BANKED
+	CLRF	ANSELB,BANKED
 ;ANSELC = 0
-	clrf	ANSELC,BANKED
+	CLRF	ANSELC,BANKED
 ;Set comparator register bits for many MCUs with register CM2CON0
 ;C2EN = 0
-	banksel	CM2CON0
-	bcf	CM2CON0,7,BANKED
+BANKSEL	CM2CON0
+;A8: ASM Source was:  BCF CM2CON0,C2EN,BANKED
+	BCF	CM2CON0,7,BANKED
 ;C1EN = 0
-	bcf	CM1CON0,7,BANKED
+;A8: ASM Source was:  BCF CM1CON0,C1EN,BANKED
+	BCF	CM1CON0,7,BANKED
 ;
 ;'Turn off all ports
 ;PORTA = 0
-	clrf	PORTA,ACCESS
+	CLRF	PORTA,ACCESS
 ;PORTB = 0
-	clrf	PORTB,ACCESS
+	CLRF	PORTB,ACCESS
 ;PORTC = 0
-	clrf	PORTC,ACCESS
-	return
+	CLRF	PORTC,ACCESS
+	RETURN
 
 ;********************************************************************************
 
-;Overloaded signature: BYTE:, Source: a-d.h (1739)
-FN_READAD2:
+;OVERLOADED SIGNATURE: BYTE:, SOURCE: A-D.H (1740)
+FN_READAD4:
 ;ADFM should configured to ensure LEFT justified
 ;SET ADFM OFF
-	banksel	ADCON0
-	bcf	ADCON0,2,BANKED
+BANKSEL	ADCON0
+;A8: ASM Source was:  BCF ADCON0,ADFM0,BANKED
+	BCF	ADCON0,2,BANKED
 ;for 16F1885x and possibly future others
 ;ADPCH = ADReadPort
-	movff	ADREADPORT,ADPCH
+	MOVFF	ADREADPORT,ADPCH
 ;***************************************
 ;Perform conversion
 ;LLReadAD 1
-;Macro Source: a-d.h (370)
+;Macro Source: a-d.h (371)
 ;***  'Special section for 16F1688x Chips ***
 ;'Configure ANSELA/B/C/D
 ;Select Case ADReadPort 'Configure ANSELA/B/C/D @DebugADC_H
 ;Case 0: Set ANSELA.0 On
-SysSelect2Case1:
-	movf	ADREADPORT,F,ACCESS
-	btfss	STATUS,2,ACCESS
-	bra	SysSelect2Case2
-	banksel	ANSELA
-	bsf	ANSELA,0,BANKED
+SYSSELECT2CASE1:
+	MOVF	ADREADPORT,F,ACCESS
+;A8: ASM Source was:  BTFSS STATUS, Z,ACCESS
+	BTFSS	STATUS,2,ACCESS
+	BRA	SYSSELECT2CASE2
+BANKSEL	ANSELA
+	BSF	ANSELA,0,BANKED
 ;Case 1: Set ANSELA.1 On
-	bra	SysSelectEnd2
-SysSelect2Case2:
-	decf	ADREADPORT,W,ACCESS
-	btfss	STATUS,2,ACCESS
-	bra	SysSelect2Case3
-	banksel	ANSELA
-	bsf	ANSELA,1,BANKED
+	BRA	SYSSELECTEND2
+SYSSELECT2CASE2:
+	DECF	ADREADPORT,W,ACCESS
+;A8: ASM Source was:  BTFSS STATUS, Z,ACCESS
+	BTFSS	STATUS,2,ACCESS
+	BRA	SYSSELECT2CASE3
+BANKSEL	ANSELA
+	BSF	ANSELA,1,BANKED
 ;Case 2: Set ANSELA.2 On
-	bra	SysSelectEnd2
-SysSelect2Case3:
-	movlw	2
-	subwf	ADREADPORT,W,ACCESS
-	btfss	STATUS,2,ACCESS
-	bra	SysSelect2Case4
-	banksel	ANSELA
-	bsf	ANSELA,2,BANKED
+	BRA	SYSSELECTEND2
+SYSSELECT2CASE3:
+	MOVLW	2
+	SUBWF	ADREADPORT,W,ACCESS
+;A8: ASM Source was:  BTFSS STATUS, Z,ACCESS
+	BTFSS	STATUS,2,ACCESS
+	BRA	SYSSELECT2CASE4
+BANKSEL	ANSELA
+	BSF	ANSELA,2,BANKED
 ;Case 3: Set ANSELA.3 On
-	bra	SysSelectEnd2
-SysSelect2Case4:
-	movlw	3
-	subwf	ADREADPORT,W,ACCESS
-	btfss	STATUS,2,ACCESS
-	bra	SysSelect2Case5
-	banksel	ANSELA
-	bsf	ANSELA,3,BANKED
+	BRA	SYSSELECTEND2
+SYSSELECT2CASE4:
+	MOVLW	3
+	SUBWF	ADREADPORT,W,ACCESS
+;A8: ASM Source was:  BTFSS STATUS, Z,ACCESS
+	BTFSS	STATUS,2,ACCESS
+	BRA	SYSSELECT2CASE5
+BANKSEL	ANSELA
+	BSF	ANSELA,3,BANKED
 ;Case 4: Set ANSELA.4 ON
-	bra	SysSelectEnd2
-SysSelect2Case5:
-	movlw	4
-	subwf	ADREADPORT,W,ACCESS
-	btfss	STATUS,2,ACCESS
-	bra	SysSelect2Case6
-	banksel	ANSELA
-	bsf	ANSELA,4,BANKED
+	BRA	SYSSELECTEND2
+SYSSELECT2CASE5:
+	MOVLW	4
+	SUBWF	ADREADPORT,W,ACCESS
+;A8: ASM Source was:  BTFSS STATUS, Z,ACCESS
+	BTFSS	STATUS,2,ACCESS
+	BRA	SYSSELECT2CASE6
+BANKSEL	ANSELA
+	BSF	ANSELA,4,BANKED
 ;Case 5: Set ANSELA.5 On
-	bra	SysSelectEnd2
-SysSelect2Case6:
-	movlw	5
-	subwf	ADREADPORT,W,ACCESS
-	btfss	STATUS,2,ACCESS
-	bra	SysSelect2Case7
-	banksel	ANSELA
-	bsf	ANSELA,5,BANKED
+	BRA	SYSSELECTEND2
+SYSSELECT2CASE6:
+	MOVLW	5
+	SUBWF	ADREADPORT,W,ACCESS
+;A8: ASM Source was:  BTFSS STATUS, Z,ACCESS
+	BTFSS	STATUS,2,ACCESS
+	BRA	SYSSELECT2CASE7
+BANKSEL	ANSELA
+	BSF	ANSELA,5,BANKED
 ;Case 6: Set ANSELA.6 On
-	bra	SysSelectEnd2
-SysSelect2Case7:
-	movlw	6
-	subwf	ADREADPORT,W,ACCESS
-	btfss	STATUS,2,ACCESS
-	bra	SysSelect2Case8
-	banksel	ANSELA
-	bsf	ANSELA,6,BANKED
+	BRA	SYSSELECTEND2
+SYSSELECT2CASE7:
+	MOVLW	6
+	SUBWF	ADREADPORT,W,ACCESS
+;A8: ASM Source was:  BTFSS STATUS, Z,ACCESS
+	BTFSS	STATUS,2,ACCESS
+	BRA	SYSSELECT2CASE8
+BANKSEL	ANSELA
+	BSF	ANSELA,6,BANKED
 ;Case 7: Set ANSELA.7 On
-	bra	SysSelectEnd2
-SysSelect2Case8:
-	movlw	7
-	subwf	ADREADPORT,W,ACCESS
-	btfss	STATUS,2,ACCESS
-	bra	SysSelect2Case9
-	banksel	ANSELA
-	bsf	ANSELA,7,BANKED
+	BRA	SYSSELECTEND2
+SYSSELECT2CASE8:
+	MOVLW	7
+	SUBWF	ADREADPORT,W,ACCESS
+;A8: ASM Source was:  BTFSS STATUS, Z,ACCESS
+	BTFSS	STATUS,2,ACCESS
+	BRA	SYSSELECT2CASE9
+BANKSEL	ANSELA
+	BSF	ANSELA,7,BANKED
 ;Case 8: Set ANSELB.0 On
-	bra	SysSelectEnd2
-SysSelect2Case9:
-	movlw	8
-	subwf	ADREADPORT,W,ACCESS
-	btfss	STATUS,2,ACCESS
-	bra	SysSelect2Case10
-	banksel	ANSELB
-	bsf	ANSELB,0,BANKED
+	BRA	SYSSELECTEND2
+SYSSELECT2CASE9:
+	MOVLW	8
+	SUBWF	ADREADPORT,W,ACCESS
+;A8: ASM Source was:  BTFSS STATUS, Z,ACCESS
+	BTFSS	STATUS,2,ACCESS
+	BRA	SYSSELECT2CASE10
+BANKSEL	ANSELB
+	BSF	ANSELB,0,BANKED
 ;Case 9: Set ANSELB.1 On
-	bra	SysSelectEnd2
-SysSelect2Case10:
-	movlw	9
-	subwf	ADREADPORT,W,ACCESS
-	btfss	STATUS,2,ACCESS
-	bra	SysSelect2Case11
-	banksel	ANSELB
-	bsf	ANSELB,1,BANKED
+	BRA	SYSSELECTEND2
+SYSSELECT2CASE10:
+	MOVLW	9
+	SUBWF	ADREADPORT,W,ACCESS
+;A8: ASM Source was:  BTFSS STATUS, Z,ACCESS
+	BTFSS	STATUS,2,ACCESS
+	BRA	SYSSELECT2CASE11
+BANKSEL	ANSELB
+	BSF	ANSELB,1,BANKED
 ;Case 10: Set ANSELB.2 On
-	bra	SysSelectEnd2
-SysSelect2Case11:
-	movlw	10
-	subwf	ADREADPORT,W,ACCESS
-	btfss	STATUS,2,ACCESS
-	bra	SysSelect2Case12
-	banksel	ANSELB
-	bsf	ANSELB,2,BANKED
+	BRA	SYSSELECTEND2
+SYSSELECT2CASE11:
+	MOVLW	10
+	SUBWF	ADREADPORT,W,ACCESS
+;A8: ASM Source was:  BTFSS STATUS, Z,ACCESS
+	BTFSS	STATUS,2,ACCESS
+	BRA	SYSSELECT2CASE12
+BANKSEL	ANSELB
+	BSF	ANSELB,2,BANKED
 ;Case 11: Set ANSELB.3 On
-	bra	SysSelectEnd2
-SysSelect2Case12:
-	movlw	11
-	subwf	ADREADPORT,W,ACCESS
-	btfss	STATUS,2,ACCESS
-	bra	SysSelect2Case13
-	banksel	ANSELB
-	bsf	ANSELB,3,BANKED
+	BRA	SYSSELECTEND2
+SYSSELECT2CASE12:
+	MOVLW	11
+	SUBWF	ADREADPORT,W,ACCESS
+;A8: ASM Source was:  BTFSS STATUS, Z,ACCESS
+	BTFSS	STATUS,2,ACCESS
+	BRA	SYSSELECT2CASE13
+BANKSEL	ANSELB
+	BSF	ANSELB,3,BANKED
 ;Case 12: Set ANSELB.4 On
-	bra	SysSelectEnd2
-SysSelect2Case13:
-	movlw	12
-	subwf	ADREADPORT,W,ACCESS
-	btfss	STATUS,2,ACCESS
-	bra	SysSelect2Case14
-	banksel	ANSELB
-	bsf	ANSELB,4,BANKED
+	BRA	SYSSELECTEND2
+SYSSELECT2CASE13:
+	MOVLW	12
+	SUBWF	ADREADPORT,W,ACCESS
+;A8: ASM Source was:  BTFSS STATUS, Z,ACCESS
+	BTFSS	STATUS,2,ACCESS
+	BRA	SYSSELECT2CASE14
+BANKSEL	ANSELB
+	BSF	ANSELB,4,BANKED
 ;Case 13: Set ANSELB.5 On
-	bra	SysSelectEnd2
-SysSelect2Case14:
-	movlw	13
-	subwf	ADREADPORT,W,ACCESS
-	btfss	STATUS,2,ACCESS
-	bra	SysSelect2Case15
-	banksel	ANSELB
-	bsf	ANSELB,5,BANKED
+	BRA	SYSSELECTEND2
+SYSSELECT2CASE14:
+	MOVLW	13
+	SUBWF	ADREADPORT,W,ACCESS
+;A8: ASM Source was:  BTFSS STATUS, Z,ACCESS
+	BTFSS	STATUS,2,ACCESS
+	BRA	SYSSELECT2CASE15
+BANKSEL	ANSELB
+	BSF	ANSELB,5,BANKED
 ;Case 14: Set ANSELB.6 On
-	bra	SysSelectEnd2
-SysSelect2Case15:
-	movlw	14
-	subwf	ADREADPORT,W,ACCESS
-	btfss	STATUS,2,ACCESS
-	bra	SysSelect2Case16
-	banksel	ANSELB
-	bsf	ANSELB,6,BANKED
+	BRA	SYSSELECTEND2
+SYSSELECT2CASE15:
+	MOVLW	14
+	SUBWF	ADREADPORT,W,ACCESS
+;A8: ASM Source was:  BTFSS STATUS, Z,ACCESS
+	BTFSS	STATUS,2,ACCESS
+	BRA	SYSSELECT2CASE16
+BANKSEL	ANSELB
+	BSF	ANSELB,6,BANKED
 ;Case 15: Set ANSELB.7 On
-	bra	SysSelectEnd2
-SysSelect2Case16:
-	movlw	15
-	subwf	ADREADPORT,W,ACCESS
-	btfss	STATUS,2,ACCESS
-	bra	SysSelect2Case17
-	banksel	ANSELB
-	bsf	ANSELB,7,BANKED
+	BRA	SYSSELECTEND2
+SYSSELECT2CASE16:
+	MOVLW	15
+	SUBWF	ADREADPORT,W,ACCESS
+;A8: ASM Source was:  BTFSS STATUS, Z,ACCESS
+	BTFSS	STATUS,2,ACCESS
+	BRA	SYSSELECT2CASE17
+BANKSEL	ANSELB
+	BSF	ANSELB,7,BANKED
 ;Case 16: Set ANSELC.0 On
-	bra	SysSelectEnd2
-SysSelect2Case17:
-	movlw	16
-	subwf	ADREADPORT,W,ACCESS
-	btfss	STATUS,2,ACCESS
-	bra	SysSelect2Case18
-	banksel	ANSELC
-	bsf	ANSELC,0,BANKED
+	BRA	SYSSELECTEND2
+SYSSELECT2CASE17:
+	MOVLW	16
+	SUBWF	ADREADPORT,W,ACCESS
+;A8: ASM Source was:  BTFSS STATUS, Z,ACCESS
+	BTFSS	STATUS,2,ACCESS
+	BRA	SYSSELECT2CASE18
+BANKSEL	ANSELC
+	BSF	ANSELC,0,BANKED
 ;Case 17: Set ANSELC.1 On
-	bra	SysSelectEnd2
-SysSelect2Case18:
-	movlw	17
-	subwf	ADREADPORT,W,ACCESS
-	btfss	STATUS,2,ACCESS
-	bra	SysSelect2Case19
-	banksel	ANSELC
-	bsf	ANSELC,1,BANKED
+	BRA	SYSSELECTEND2
+SYSSELECT2CASE18:
+	MOVLW	17
+	SUBWF	ADREADPORT,W,ACCESS
+;A8: ASM Source was:  BTFSS STATUS, Z,ACCESS
+	BTFSS	STATUS,2,ACCESS
+	BRA	SYSSELECT2CASE19
+BANKSEL	ANSELC
+	BSF	ANSELC,1,BANKED
 ;Case 18: Set ANSELC.2 On
-	bra	SysSelectEnd2
-SysSelect2Case19:
-	movlw	18
-	subwf	ADREADPORT,W,ACCESS
-	btfss	STATUS,2,ACCESS
-	bra	SysSelect2Case20
-	banksel	ANSELC
-	bsf	ANSELC,2,BANKED
+	BRA	SYSSELECTEND2
+SYSSELECT2CASE19:
+	MOVLW	18
+	SUBWF	ADREADPORT,W,ACCESS
+;A8: ASM Source was:  BTFSS STATUS, Z,ACCESS
+	BTFSS	STATUS,2,ACCESS
+	BRA	SYSSELECT2CASE20
+BANKSEL	ANSELC
+	BSF	ANSELC,2,BANKED
 ;Case 19: Set ANSELC.3 On
-	bra	SysSelectEnd2
-SysSelect2Case20:
-	movlw	19
-	subwf	ADREADPORT,W,ACCESS
-	btfss	STATUS,2,ACCESS
-	bra	SysSelect2Case21
-	banksel	ANSELC
-	bsf	ANSELC,3,BANKED
+	BRA	SYSSELECTEND2
+SYSSELECT2CASE20:
+	MOVLW	19
+	SUBWF	ADREADPORT,W,ACCESS
+;A8: ASM Source was:  BTFSS STATUS, Z,ACCESS
+	BTFSS	STATUS,2,ACCESS
+	BRA	SYSSELECT2CASE21
+BANKSEL	ANSELC
+	BSF	ANSELC,3,BANKED
 ;Case 20: Set ANSELC.4 On
-	bra	SysSelectEnd2
-SysSelect2Case21:
-	movlw	20
-	subwf	ADREADPORT,W,ACCESS
-	btfss	STATUS,2,ACCESS
-	bra	SysSelect2Case22
-	banksel	ANSELC
-	bsf	ANSELC,4,BANKED
+	BRA	SYSSELECTEND2
+SYSSELECT2CASE21:
+	MOVLW	20
+	SUBWF	ADREADPORT,W,ACCESS
+;A8: ASM Source was:  BTFSS STATUS, Z,ACCESS
+	BTFSS	STATUS,2,ACCESS
+	BRA	SYSSELECT2CASE22
+BANKSEL	ANSELC
+	BSF	ANSELC,4,BANKED
 ;Case 21: Set ANSELC.5 On
-	bra	SysSelectEnd2
-SysSelect2Case22:
-	movlw	21
-	subwf	ADREADPORT,W,ACCESS
-	btfss	STATUS,2,ACCESS
-	bra	SysSelect2Case23
-	banksel	ANSELC
-	bsf	ANSELC,5,BANKED
+	BRA	SYSSELECTEND2
+SYSSELECT2CASE22:
+	MOVLW	21
+	SUBWF	ADREADPORT,W,ACCESS
+;A8: ASM Source was:  BTFSS STATUS, Z,ACCESS
+	BTFSS	STATUS,2,ACCESS
+	BRA	SYSSELECT2CASE23
+BANKSEL	ANSELC
+	BSF	ANSELC,5,BANKED
 ;Case 22: Set ANSELC.6 On
-	bra	SysSelectEnd2
-SysSelect2Case23:
-	movlw	22
-	subwf	ADREADPORT,W,ACCESS
-	btfss	STATUS,2,ACCESS
-	bra	SysSelect2Case24
-	banksel	ANSELC
-	bsf	ANSELC,6,BANKED
+	BRA	SYSSELECTEND2
+SYSSELECT2CASE23:
+	MOVLW	22
+	SUBWF	ADREADPORT,W,ACCESS
+;A8: ASM Source was:  BTFSS STATUS, Z,ACCESS
+	BTFSS	STATUS,2,ACCESS
+	BRA	SYSSELECT2CASE24
+BANKSEL	ANSELC
+	BSF	ANSELC,6,BANKED
 ;Case 23: Set ANSELC.7 On
-	bra	SysSelectEnd2
-SysSelect2Case24:
-	movlw	23
-	subwf	ADREADPORT,W,ACCESS
-	btfss	STATUS,2,ACCESS
-	bra	SysSelectEnd2
-	banksel	ANSELC
-	bsf	ANSELC,7,BANKED
+	BRA	SYSSELECTEND2
+SYSSELECT2CASE24:
+	MOVLW	23
+	SUBWF	ADREADPORT,W,ACCESS
+;A8: ASM Source was:  BTFSS STATUS, Z,ACCESS
+	BTFSS	STATUS,2,ACCESS
+	BRA	SYSSELECTEND2
+BANKSEL	ANSELC
+	BSF	ANSELC,7,BANKED
 ;End Select  '*** ANSEL Bits should now be set ***
-SysSelectEnd2:
+SYSSELECTEND2:
 ;*** ANSEL Bits are now set ***
 ;Set voltage reference
 ;ADREF = 0  'Default = 0 /Vref+ = Vdd/ Vref-  = Vss
 ;Configure AD clock defaults
 ;Set ADCS off 'Clock source = FOSC/ADCLK
-	banksel	ADCON0
-	bcf	ADCON0,4,BANKED
+BANKSEL	ADCON0
+;A8: ASM Source was:  BCF ADCON0,ADCS,BANKED
+	BCF	ADCON0,4,BANKED
 ;ADCLK = 1 ' default to FOSC/2
-	movlw	1
-	movwf	ADCLK,BANKED
+	MOVLW	1
+	MOVWF	ADCLK,BANKED
 ;Conversion Clock Speed
 ;SET ADCS OFF  'ADCON0.4
-	bcf	ADCON0,4,BANKED
+;A8: ASM Source was:  BCF ADCON0,ADCS,BANKED
+	BCF	ADCON0,4,BANKED
 ;ADCLK = 15    'FOSC/16
-	movlw	15
-	movwf	ADCLK,BANKED
+	MOVLW	15
+	MOVWF	ADCLK,BANKED
 ;Result formatting
 ;if ADLeftadjust = 0 then  '10-bit
 ;Set ADCON.2 off     '8-bit
 ;Set ADFM OFF
-	bcf	ADCON0,2,BANKED
+;A8: ASM Source was:  BCF ADCON0,ADFM0,BANKED
+	BCF	ADCON0,2,BANKED
 ;Set ADFM0 OFF
-	bcf	ADCON0,2,BANKED
+;A8: ASM Source was:  BCF ADCON0,ADFM0,BANKED
+	BCF	ADCON0,2,BANKED
 ;End if
 ;Select Channel
 ;ADPCH = ADReadPort  'Configure AD read Channel
-	movff	ADREADPORT,ADPCH
+	MOVFF	ADREADPORT,ADPCH
 ;Enable A/D
 ;SET ADON ON
-	bsf	ADCON0,7,BANKED
+;A8: ASM Source was:  BSF ADCON0,ADON,BANKED
+	BSF	ADCON0,7,BANKED
 ;Acquisition Delay
 ;Wait AD_Delay
-	movlw	2
-	movwf	SYSWAITTEMP10US,ACCESS
-	banksel	0
-	call	Delay_10US
+	MOVLW	2
+	MOVWF	SYSWAITTEMP10US,ACCESS
+	BANKSEL	0
+	RCALL	DELAY_10US
 ;Read A/D
 ;SET GO_NOT_DONE ON
-	banksel	ADCON0
-	bsf	ADCON0,0,BANKED
+BANKSEL	ADCON0
+;A8: ASM Source was:  BSF ADCON0,GO_NOT_DONE,BANKED
+	BSF	ADCON0,0,BANKED
 ;nop
-	nop
+	NOP
 ;Wait While GO_NOT_DONE ON
-SysWaitLoop1:
-	btfsc	ADCON0,0,BANKED
-	bra	SysWaitLoop1
+SYSWAITLOOP1:
+;A8: ASM Source was:  BTFSC ADCON0,GO_NOT_DONE,BANKED
+	BTFSC	ADCON0,0,BANKED
+	BRA	SYSWAITLOOP1
 ;Switch off A/D
 ;SET ADCON0.ADON OFF
-	bcf	ADCON0,7,BANKED
+;A8: ASM Source was:  BCF ADCON0,ADON,BANKED
+	BCF	ADCON0,7,BANKED
 ;ANSELA = 0
-	banksel	ANSELA
-	clrf	ANSELA,BANKED
+BANKSEL	ANSELA
+	CLRF	ANSELA,BANKED
 ;ANSELB = 0
-	clrf	ANSELB,BANKED
+	CLRF	ANSELB,BANKED
 ;ANSELC = 0
-	clrf	ANSELC,BANKED
+	CLRF	ANSELC,BANKED
 ;ReadAD = ADRESH
-	movff	ADRESH,READAD
+	MOVFF	ADRESH,READAD
 ;SET ADFM OFF
-	banksel	ADCON0
-	bcf	ADCON0,2,BANKED
-	banksel	0
-	return
+BANKSEL	ADCON0
+;A8: ASM Source was:  BCF ADCON0,ADFM0,BANKED
+	BCF	ADCON0,2,BANKED
+	BANKSEL	0
+	RETURN
 
 ;********************************************************************************
 
+	ALIGN	2;X2
 ;
 ; Declare Power-On-Reset entry point
 ;
- END     resetVec
+ END     RESETVEC

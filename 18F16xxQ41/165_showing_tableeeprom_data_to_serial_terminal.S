@@ -9,7 +9,7 @@
 ;PROCESSOR   18F16Q41
  PAGEWIDTH   132
  RADIX       DEC
- TITLE       "D:\GCB@Syn39\GreatCowBasic\Demos\vendor_boards\microchip_low_pin_count_demo_board\pickit2_board\18f16q41\070_debounce_the_switch.S"
+ TITLE       "D:\GCB@Syn39\GreatCowBasic\Demos\vendor_boards\microchip_low_pin_count_demo_board\pickit2_board\18f16q41\165_showing_tableeeprom_data_to_serial_terminal.S"
  SUBTITLE    "02-10-2021"
 
 ; Reverse lookup file
@@ -65,14 +65,21 @@
 ;********************************************************************************
 
 ;Set aside RAM memory locations for variables. All variables are global.
- CURRENTSWITCHSTATE               EQU 1284                    ; 0X504
  DELAYTEMP                        EQU 1280                    ; 0X500
  DELAYTEMP2                       EQU 1281                    ; 0X501
- FUNCKEYPRESSED                   EQU 1285                    ; 0X505
- LASTSWITCHSTATE                  EQU 1286                    ; 0X506
- SYSTEMP1                         EQU 1287                    ; 0X507
+ EEADDRESS                        EQU 1285                    ; 0X505
+ EEDATA                           EQU 1286                    ; 0X506
+ EEDATAVALUE                      EQU 1287                    ; 0X507
+ RD                               EQU 1288                    ; 0X508
+ SOMEVAR                          EQU 1289                    ; 0X509
+ SYSBITVAR0                       EQU 1290                    ; 0X50A
+ SYSEEADDRESS                     EQU 1291                    ; 0X50B
+ SYSEEADDRESS_H                   EQU 1292                    ; 0X50C
+ SYSTEMP1                         EQU 1293                    ; 0X50D
  SYSWAITTEMPMS                    EQU 1282                    ; 0X502
  SYSWAITTEMPMS_H                  EQU 1283                    ; 0X503
+ SYSWAITTEMPS                     EQU 1284                    ; 0X504
+ TABLELOC                         EQU 1294                    ; 0X50E
 
 ;********************************************************************************
 
@@ -94,13 +101,9 @@ BASPROGRAMSTART:
 
 ;START OF THE MAIN PROGRAM
 ;''
-;'' This demonstration uses a simple software routine to avoid the initial noise on the switch
-;'' pin. The code will inspect the switch status, but should overcome most of the noise from a switch.
+;''  This demonstration shows the use of EEProm values created from a Table..
 ;''
-;'' Some switches are worse than others.
-;''
-;'' When the switch is held down and released, one LED will toggle.
-;''
+;'' This will show the value of the EEPROM on the serial Terminal.
 ;''
 ;''************************************************************************
 ;''@author  EvanV
@@ -109,9 +112,10 @@ BASPROGRAMSTART:
 ;''@date    31.12.2020
 ;----- Configuration
 ;Chip Settings.
+;Template comment at the end of the config file
 ;' -------------------PORTA----------------
 ;' Bit#:  -7---6---5---4---3---2---1---0---
-;' IO:   -----------------SW----------ADC--
+;' IO:   ---------------------SW------ADC--
 ;'-----------------------------------------
 ;'
 ;' -------------------PORTB----------------
@@ -121,9 +125,8 @@ BASPROGRAMSTART:
 ;'
 ;' ------------------PORTC-----------------
 ;' Bit#:  -7---6---5---4---3---2---1---0---
-;' IO:    ---------------LED--LED-LED LED--
+;' IO:    ---- TX---------LED--LED-LED LED--
 ;'-----------------------------------------
-;'
 ;Define constants to make things easier. We can reuse these at any time.
 ;#DEFINE LEDPORT LATC
 ;Dir     RC0         Out
@@ -137,77 +140,42 @@ BASPROGRAMSTART:
 ;#DEFINE POTENTIOMETER PORTA.0
 ;Dir     POTENTIOMETER In
 	BSF	TRISA,0,ACCESS
-;#DEFINE SWITCHIN      PORTA.3
+;#DEFINE SWITCHIN      PORTA.2
 ;Dir     SWITCHIN      In
-	BSF	TRISA,3,ACCESS
-;#DEFINE DOWN          0
+	BSF	TRISA,2,ACCESS
 ;*****************************************************************************************************
 ;Main program commences here.. everything before this is setup for the board.
-;Debouncing a switch
-;Do Forever
-SYSDOLOOP_S1:
-;Wait 10 ms
-	MOVLW	10
-	MOVWF	SYSWAITTEMPMS,ACCESS
-	CLRF	SYSWAITTEMPMS_H,ACCESS
-	RCALL	DELAY_MS
-;keyPressed is a Function that returns the state
-;If  funcKeyPressed() = TRUE Then
-	RCALL	FN_FUNCKEYPRESSED
-	INCF	FUNCKEYPRESSED,W,ACCESS
-;A8: ASM Source was:  BTFSS STATUS, Z,ACCESS
-	BTFSS	STATUS,2,ACCESS
-	BRA	ENDIF1
-;push button pressed
-;RC0 = !RC0
-	CLRF	SYSTEMP1,ACCESS
-;A8: ASM Source was:  BTFSC PORTC,RC0,ACCESS
-	BTFSC	PORTC,0,ACCESS
-	INCF	SYSTEMP1,F,ACCESS
-	COMF	SYSTEMP1,F,ACCESS
-;A8: ASM Source was:  BCF LATC,RC0,ACCESS
-	BCF	LATC,0,ACCESS
-	BTFSC	SYSTEMP1,0,ACCESS
-;A8: ASM Source was:  BSF LATC,RC0,ACCESS
-	BSF	LATC,0,ACCESS
-;RC1 = !RC1
-	CLRF	SYSTEMP1,ACCESS
-;A8: ASM Source was:  BTFSC PORTC,RC1,ACCESS
-	BTFSC	PORTC,1,ACCESS
-	INCF	SYSTEMP1,F,ACCESS
-	COMF	SYSTEMP1,F,ACCESS
-;A8: ASM Source was:  BCF LATC,RC1,ACCESS
-	BCF	LATC,1,ACCESS
-	BTFSC	SYSTEMP1,0,ACCESS
-;A8: ASM Source was:  BSF LATC,RC1,ACCESS
-	BSF	LATC,1,ACCESS
-;RC2 = !RC2
-	CLRF	SYSTEMP1,ACCESS
-;A8: ASM Source was:  BTFSC PORTC,RC2,ACCESS
-	BTFSC	PORTC,2,ACCESS
-	INCF	SYSTEMP1,F,ACCESS
-	COMF	SYSTEMP1,F,ACCESS
-;A8: ASM Source was:  BCF LATC,RC2,ACCESS
-	BCF	LATC,2,ACCESS
-	BTFSC	SYSTEMP1,0,ACCESS
-;A8: ASM Source was:  BSF LATC,RC2,ACCESS
-	BSF	LATC,2,ACCESS
-;RC3 = !RC3
-	CLRF	SYSTEMP1,ACCESS
-;A8: ASM Source was:  BTFSC PORTC,RC3,ACCESS
-	BTFSC	PORTC,3,ACCESS
-	INCF	SYSTEMP1,F,ACCESS
-	COMF	SYSTEMP1,F,ACCESS
-;A8: ASM Source was:  BCF LATC,RC3,ACCESS
-	BCF	LATC,3,ACCESS
-	BTFSC	SYSTEMP1,0,ACCESS
-;A8: ASM Source was:  BSF LATC,RC3,ACCESS
-	BSF	LATC,3,ACCESS
-;End If
-ENDIF1:
-;Loop
-	BRA	SYSDOLOOP_S1
-SYSDOLOOP_E1:
+;Dim DisplayNewLine, Outdata, Indata  As Byte
+;Dim EEPromAddress as Word
+;Wait 1 s
+	MOVLW	1
+	MOVWF	SYSWAITTEMPS,ACCESS
+	RCALL	DELAY_S
+;Read table item
+;Must use ReadTable and a variable for the index, or the table will not be downloaded to EEPROM
+;Dim TableLoc, SomeVar as Byte
+;TableLoc = 2
+	MOVLW	2
+	MOVWF	TABLELOC,ACCESS
+;ReadTable TestDataSource, TableLoc, SomeVar
+	MOVLW	LOW(TABLETESTDATASOURCE)
+	ADDWF	TABLELOC,W,ACCESS
+	MOVWF	EEADDRESS,ACCESS
+	RCALL	NVMADR_EPREAD
+	MOVFF	EEDATAVALUE,SOMEVAR
+;Write to table , this is not required
+;EPWrite 0x08, 0x55
+	MOVLW	8
+	MOVWF	SYSEEADDRESS,ACCESS
+	CLRF	SYSEEADDRESS_H,ACCESS
+	MOVLW	85
+	MOVWF	EEDATA,ACCESS
+	RCALL	NVMADR_EPWRITE
+;Table of values to write to EEPROM
+;EEPROM location 0 will store length of table
+;Subsequent locations will each store a value
+;End
+	BRA	BASPROGRAMEND
 BASPROGRAMEND:
 	SLEEP
 	BRA	BASPROGRAMEND
@@ -235,44 +203,15 @@ DMS_INNER:
 
 ;********************************************************************************
 
-;SOURCE: 070_DEBOUNCE_THE_SWITCH.GCB (83)
-FN_FUNCKEYPRESSED:
-;Dim CurrentSwitchState As Byte
-;Dim LastSwitchState As Byte
-;wait 1 ms
-	MOVLW	1
+DELAY_S:
+DS_START:
+	MOVLW	232
 	MOVWF	SYSWAITTEMPMS,ACCESS
-	CLRF	SYSWAITTEMPMS_H,ACCESS
+	MOVLW	3
+	MOVWF	SYSWAITTEMPMS_H,ACCESS
 	RCALL	DELAY_MS
-;If ( SWITCHIN = DOWN ) Then
-	BTFSC	PORTA,3,ACCESS
-	BRA	ELSE10_1
-;CurrentSwitchState = TRUE
-	SETF	CURRENTSWITCHSTATE,ACCESS
-;Else
-	BRA	ENDIF10
-ELSE10_1:
-;CurrentSwitchState = FALSE
-	CLRF	CURRENTSWITCHSTATE,ACCESS
-;End If
-ENDIF10:
-;If (CurrentSwitchState <> LastSwitchState) Then
-	MOVF	LASTSWITCHSTATE,W,ACCESS
-	SUBWF	CURRENTSWITCHSTATE,W,ACCESS
-;A8: ASM Source was:  BTFSC STATUS, Z,ACCESS
-	BTFSC	STATUS,2,ACCESS
-	BRA	ELSE11_1
-;LastSwitchState = CurrentSwitchState
-	MOVFF	CURRENTSWITCHSTATE,LASTSWITCHSTATE
-;funcKeyPressed =  CurrentSwitchState
-	MOVFF	CURRENTSWITCHSTATE,FUNCKEYPRESSED
-;Else
-	BRA	ENDIF11
-ELSE11_1:
-;funcKeyPressed = FALSE
-	CLRF	FUNCKEYPRESSED,ACCESS
-;End If
-ENDIF11:
+	DECFSZ	SYSWAITTEMPS, F,ACCESS
+	BRA	DS_START
 	RETURN
 
 ;********************************************************************************
@@ -356,6 +295,139 @@ BANKSEL	CM2CON0
 
 ;********************************************************************************
 
+;SOURCE: EEPROM.H (428)
+NVMADR_EPREAD:
+;Select DATA EE section (0x380000 - 0x3803FF) for ChipFamily18FxxQ41
+;NVMADRU = 0x38
+	MOVLW	56
+	MOVWF	NVMADRU,BANKED
+;NVMADRH =SysEEAddress_h
+	MOVFF	SYSEEADDRESS_H,NVMADRH
+;NVMADRL =SysEEAddress
+;A6: ASM Source was:  MOVFF SYSEEADDRESS,NVMADRL
+	MOVFF	SYSEEADDRESS,NVMADR
+;RD = 1
+	MOVLW	1
+	MOVWF	RD,ACCESS
+;NOP     ' NOPs may be required for latency at high frequencies
+	NOP
+;NOP
+	NOP
+;NOP
+	NOP
+;NOP
+	NOP
+;EEDataValue = NVMDATL
+;A2: ASM Source was:  MOVFF NVMDATL,EEDATAVALUE
+;A4: ASM Source was:  MOVFF NVMDATL,EEDATAVALUE
+	MOVFF	NVMDAT,EEDATAVALUE
+	RETURN
+
+;********************************************************************************
+
+;SOURCE: EEPROM.H (284)
+NVMADR_EPWRITE:
+;dim IntState as bit
+;IntState = GIE
+	BCF	SYSBITVAR0,1,ACCESS
+;A8: ASM Source was:  BTFSC INTCON0,GIE,ACCESS
+	BTFSC	INTCON0,7,ACCESS
+	BSF	SYSBITVAR0,1,ACCESS
+;Dim SysEEPromAddress As Word
+;Dim  NVMCON1_0_State, NVMCON1_1_State, NVMCON1_2_State as bit
+;NVMCON1_0_State = NVMCON1.0
+	BCF	SYSBITVAR0,4,ACCESS
+	BTFSC	NVMCON1,0,BANKED
+	BSF	SYSBITVAR0,4,ACCESS
+;NVMCON1_1_State = NVMCON1.1
+	BCF	SYSBITVAR0,5,ACCESS
+	BTFSC	NVMCON1,1,BANKED
+	BSF	SYSBITVAR0,5,ACCESS
+;NVMCON1_2_State = NVMCON1.2
+	BCF	SYSBITVAR0,6,ACCESS
+	BTFSC	NVMCON1,2,BANKED
+	BSF	SYSBITVAR0,6,ACCESS
+;Select DATA EE section (0x380000 - 0x3803FF) for ChipFamily18FxxQ41
+;NVMADRU = 0x38
+	MOVLW	56
+	MOVWF	NVMADRU,BANKED
+;Set the NVMCMD control bits for DFM Byte Read operation
+;NVMCON1 = NVMCON1 and 0XF8 or 0x03' set bits ,1 and0
+	MOVLW	248
+	ANDWF	NVMCON1,W,BANKED
+	MOVWF	SYSTEMP1,ACCESS
+	MOVLW	3
+	IORWF	SYSTEMP1,W,ACCESS
+	MOVWF	NVMCON1,BANKED
+;NVMADRH =SysEEAddress_h
+	MOVFF	SYSEEADDRESS_H,NVMADRH
+;NVMADRL =SysEEAddress
+;A6: ASM Source was:  MOVFF SYSEEADDRESS,NVMADRL
+	MOVFF	SYSEEADDRESS,NVMADR
+;NVMDATL = EEData
+;A6: ASM Source was:  MOVFF EEDATA,NVMDATL
+	MOVFF	EEDATA,NVMDAT
+;GIE = 0
+;A8: ASM Source was:  BCF INTCON0,GIE,ACCESS
+	BCF	INTCON0,7,ACCESS
+;ChipMemorylock = 0x55
+	MOVLW	85
+	MOVWF	NVMLOCK,BANKED
+;ChipMemorylock = 0xAA
+	MOVLW	170
+	MOVWF	NVMLOCK,BANKED
+;GO_NVMCON0 =1
+;A8: ASM Source was:  BSF NVMCON0,GO_NVMCON0,BANKED
+	BSF	NVMCON0,0,BANKED
+;wait while GO_NVMCON0 = 1
+SYSWAITLOOP1:
+;A8: ASM Source was:  BTFSC NVMCON0,GO_NVMCON0,BANKED
+	BTFSC	NVMCON0,0,BANKED
+	BRA	SYSWAITLOOP1
+;NVMCON1 = NVMCON1 and 0XF8
+	MOVLW	248
+	ANDWF	NVMCON1,F,BANKED
+;NOP     ' NOPs may be required for latency at high frequencies
+	NOP
+;NOP
+	NOP
+;NOP
+	NOP
+;NOP
+	NOP
+;NOP
+	NOP
+;NVMCON1.0 = NVMCON1_0_State
+	BCF	NVMCON1,0,BANKED
+	BTFSC	SYSBITVAR0,4,ACCESS
+	BSF	NVMCON1,0,BANKED
+;NVMCON1.1 = NVMCON1_1_State
+	BCF	NVMCON1,1,BANKED
+	BTFSC	SYSBITVAR0,5,ACCESS
+	BSF	NVMCON1,1,BANKED
+;NVMCON1.2 = NVMCON1_2_State
+	BCF	NVMCON1,2,BANKED
+	BTFSC	SYSBITVAR0,6,ACCESS
+	BSF	NVMCON1,2,BANKED
+;Restore interrupt to initial  State
+;GIE = IntState
+	BTFSS	SYSBITVAR0,1,ACCESS
+;A8: ASM Source was:  BCF INTCON0,GIE,ACCESS
+	BCF	INTCON0,7,ACCESS
+	BTFSC	SYSBITVAR0,1,ACCESS
+;A8: ASM Source was:  BSF INTCON0,GIE,ACCESS
+	BSF	INTCON0,7,ACCESS
+	RETURN
+
+;********************************************************************************
+
+;********************************************************************************
+
+; DATA LOOKUP TABLES (CHIPFAMILY18FXXQ41 EEPROM ADDRESS 0X380000)
+	ORG	0X380000
+TABLETESTDATASOURCE:
+	DB	7, 1, 2, 3, 4, 5, 6, 7
+	ALIGN	2 ;X1
 	ALIGN	2;X2
 ;
 ; Declare Power-On-Reset entry point

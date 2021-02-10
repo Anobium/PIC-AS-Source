@@ -9,7 +9,7 @@
 ;PROCESSOR   18F16Q41
  PAGEWIDTH   132
  RADIX       DEC
- TITLE       "D:\GCB@Syn39\GreatCowBasic\Demos\vendor_boards\microchip_low_pin_count_demo_board\pickit2_board\18f16q41\070_debounce_the_switch.S"
+ TITLE       "D:\GCB@Syn39\GreatCowBasic\Demos\vendor_boards\microchip_low_pin_count_demo_board\pickit2_board\18f16q41\170_using_external_interrupt_to_raise_an_event.S"
  SUBTITLE    "02-10-2021"
 
 ; Reverse lookup file
@@ -65,14 +65,18 @@
 ;********************************************************************************
 
 ;Set aside RAM memory locations for variables. All variables are global.
- CURRENTSWITCHSTATE               EQU 1284                    ; 0X504
  DELAYTEMP                        EQU 1280                    ; 0X500
  DELAYTEMP2                       EQU 1281                    ; 0X501
- FUNCKEYPRESSED                   EQU 1285                    ; 0X505
- LASTSWITCHSTATE                  EQU 1286                    ; 0X506
- SYSTEMP1                         EQU 1287                    ; 0X507
- SYSWAITTEMPMS                    EQU 1282                    ; 0X502
- SYSWAITTEMPMS_H                  EQU 1283                    ; 0X503
+ SAVEDELAYTEMP                    EQU 1282                    ; 0X502
+ SAVEDELAYTEMP2                   EQU 1283                    ; 0X503
+ SAVESYSTEMP1                     EQU 1284                    ; 0X504
+ SYSBITVAR0                       EQU 1287                    ; 0X507
+ SYSBSR                           EQU 1288                    ; 0X508
+ SYSSTATUS                        EQU 1295                    ; 0X50F
+ SYSTEMP1                         EQU 1289                    ; 0X509
+ SYSW                             EQU 1294                    ; 0X50E
+ SYSWAITTEMPUS                    EQU 1285                    ; 0X505
+ SYSWAITTEMPUS_H                  EQU 1286                    ; 0X506
 
 ;********************************************************************************
 
@@ -82,7 +86,7 @@
 	ORG	0
 	GOTO	BASPROGRAMSTART
 	ORG	8
-	RETFIE
+	BRA	INTERRUPT
 
 ;********************************************************************************
 
@@ -91,16 +95,18 @@
 BASPROGRAMSTART:
 ;CALL INITIALISATION ROUTINES
 	RCALL	INITSYS
+;ENABLE INTERRUPTS
+;A8: ASM Source was:  BSF INTCON0,GIE,ACCESS
+	BSF	INTCON0,7,ACCESS
 
 ;START OF THE MAIN PROGRAM
 ;''
-;'' This demonstration uses a simple software routine to avoid the initial noise on the switch
-;'' pin. The code will inspect the switch status, but should overcome most of the noise from a switch.
+;'' This demonstration will provide code for raising an event when a port changes.
+;'' The port that is being set then inspected in PORTA.2. Why? Because we have the switch on that port.
 ;''
-;'' Some switches are worse than others.
+;'' When the event happens the LED is toggled.  The LED will toggle when the Signal value is 0.
 ;''
-;'' When the switch is held down and released, one LED will toggle.
-;''
+;'' This does not have a proper debounce check, you can add one.
 ;''
 ;''************************************************************************
 ;''@author  EvanV
@@ -108,6 +114,7 @@ BASPROGRAMSTART:
 ;''@version 1.01
 ;''@date    31.12.2020
 ;----- Configuration
+;Chip Settings.
 ;Chip Settings.
 ;' -------------------PORTA----------------
 ;' Bit#:  -7---6---5---4---3---2---1---0---
@@ -123,7 +130,6 @@ BASPROGRAMSTART:
 ;' Bit#:  -7---6---5---4---3---2---1---0---
 ;' IO:    ---------------LED--LED-LED LED--
 ;'-----------------------------------------
-;'
 ;Define constants to make things easier. We can reuse these at any time.
 ;#DEFINE LEDPORT LATC
 ;Dir     RC0         Out
@@ -140,140 +146,26 @@ BASPROGRAMSTART:
 ;#DEFINE SWITCHIN      PORTA.3
 ;Dir     SWITCHIN      In
 	BSF	TRISA,3,ACCESS
-;#DEFINE DOWN          0
 ;*****************************************************************************************************
 ;Main program commences here.. everything before this is setup for the board.
-;Debouncing a switch
-;Do Forever
+;Dim SWState as BIT
+;Setup an Interrupt event when switch goes negative.
+;IOCAN3 = 1
+BANKSEL	IOCAN
+;A8: ASM Source was:  BSF IOCAN,IOCAN3,BANKED
+	BSF	IOCAN,3,BANKED
+;On Interrupt PORTChange  Call InterruptHandler
+;A8: ASM Source was:  BSF PIE0,IOCIE,ACCESS
+	BSF	PIE0,7,ACCESS
+;Loop forever
+;Do
 SYSDOLOOP_S1:
-;Wait 10 ms
-	MOVLW	10
-	MOVWF	SYSWAITTEMPMS,ACCESS
-	CLRF	SYSWAITTEMPMS_H,ACCESS
-	RCALL	DELAY_MS
-;keyPressed is a Function that returns the state
-;If  funcKeyPressed() = TRUE Then
-	RCALL	FN_FUNCKEYPRESSED
-	INCF	FUNCKEYPRESSED,W,ACCESS
-;A8: ASM Source was:  BTFSS STATUS, Z,ACCESS
-	BTFSS	STATUS,2,ACCESS
-	BRA	ENDIF1
-;push button pressed
-;RC0 = !RC0
-	CLRF	SYSTEMP1,ACCESS
-;A8: ASM Source was:  BTFSC PORTC,RC0,ACCESS
-	BTFSC	PORTC,0,ACCESS
-	INCF	SYSTEMP1,F,ACCESS
-	COMF	SYSTEMP1,F,ACCESS
-;A8: ASM Source was:  BCF LATC,RC0,ACCESS
-	BCF	LATC,0,ACCESS
-	BTFSC	SYSTEMP1,0,ACCESS
-;A8: ASM Source was:  BSF LATC,RC0,ACCESS
-	BSF	LATC,0,ACCESS
-;RC1 = !RC1
-	CLRF	SYSTEMP1,ACCESS
-;A8: ASM Source was:  BTFSC PORTC,RC1,ACCESS
-	BTFSC	PORTC,1,ACCESS
-	INCF	SYSTEMP1,F,ACCESS
-	COMF	SYSTEMP1,F,ACCESS
-;A8: ASM Source was:  BCF LATC,RC1,ACCESS
-	BCF	LATC,1,ACCESS
-	BTFSC	SYSTEMP1,0,ACCESS
-;A8: ASM Source was:  BSF LATC,RC1,ACCESS
-	BSF	LATC,1,ACCESS
-;RC2 = !RC2
-	CLRF	SYSTEMP1,ACCESS
-;A8: ASM Source was:  BTFSC PORTC,RC2,ACCESS
-	BTFSC	PORTC,2,ACCESS
-	INCF	SYSTEMP1,F,ACCESS
-	COMF	SYSTEMP1,F,ACCESS
-;A8: ASM Source was:  BCF LATC,RC2,ACCESS
-	BCF	LATC,2,ACCESS
-	BTFSC	SYSTEMP1,0,ACCESS
-;A8: ASM Source was:  BSF LATC,RC2,ACCESS
-	BSF	LATC,2,ACCESS
-;RC3 = !RC3
-	CLRF	SYSTEMP1,ACCESS
-;A8: ASM Source was:  BTFSC PORTC,RC3,ACCESS
-	BTFSC	PORTC,3,ACCESS
-	INCF	SYSTEMP1,F,ACCESS
-	COMF	SYSTEMP1,F,ACCESS
-;A8: ASM Source was:  BCF LATC,RC3,ACCESS
-	BCF	LATC,3,ACCESS
-	BTFSC	SYSTEMP1,0,ACCESS
-;A8: ASM Source was:  BSF LATC,RC3,ACCESS
-	BSF	LATC,3,ACCESS
-;End If
-ENDIF1:
 ;Loop
 	BRA	SYSDOLOOP_S1
 SYSDOLOOP_E1:
 BASPROGRAMEND:
 	SLEEP
 	BRA	BASPROGRAMEND
-
-;********************************************************************************
-
-DELAY_MS:
-	INCF	SYSWAITTEMPMS_H, F,ACCESS
-DMS_START:
-	MOVLW	129
-	MOVWF	DELAYTEMP2,ACCESS
-DMS_OUTER:
-	MOVLW	40
-	MOVWF	DELAYTEMP,ACCESS
-DMS_INNER:
-	DECFSZ	DELAYTEMP, F,ACCESS
-	BRA	DMS_INNER
-	DECFSZ	DELAYTEMP2, F,ACCESS
-	BRA	DMS_OUTER
-	DECFSZ	SYSWAITTEMPMS, F,ACCESS
-	BRA	DMS_START
-	DECFSZ	SYSWAITTEMPMS_H, F,ACCESS
-	BRA	DMS_START
-	RETURN
-
-;********************************************************************************
-
-;SOURCE: 070_DEBOUNCE_THE_SWITCH.GCB (83)
-FN_FUNCKEYPRESSED:
-;Dim CurrentSwitchState As Byte
-;Dim LastSwitchState As Byte
-;wait 1 ms
-	MOVLW	1
-	MOVWF	SYSWAITTEMPMS,ACCESS
-	CLRF	SYSWAITTEMPMS_H,ACCESS
-	RCALL	DELAY_MS
-;If ( SWITCHIN = DOWN ) Then
-	BTFSC	PORTA,3,ACCESS
-	BRA	ELSE10_1
-;CurrentSwitchState = TRUE
-	SETF	CURRENTSWITCHSTATE,ACCESS
-;Else
-	BRA	ENDIF10
-ELSE10_1:
-;CurrentSwitchState = FALSE
-	CLRF	CURRENTSWITCHSTATE,ACCESS
-;End If
-ENDIF10:
-;If (CurrentSwitchState <> LastSwitchState) Then
-	MOVF	LASTSWITCHSTATE,W,ACCESS
-	SUBWF	CURRENTSWITCHSTATE,W,ACCESS
-;A8: ASM Source was:  BTFSC STATUS, Z,ACCESS
-	BTFSC	STATUS,2,ACCESS
-	BRA	ELSE11_1
-;LastSwitchState = CurrentSwitchState
-	MOVFF	CURRENTSWITCHSTATE,LASTSWITCHSTATE
-;funcKeyPressed =  CurrentSwitchState
-	MOVFF	CURRENTSWITCHSTATE,FUNCKEYPRESSED
-;Else
-	BRA	ENDIF11
-ELSE11_1:
-;funcKeyPressed = FALSE
-	CLRF	FUNCKEYPRESSED,ACCESS
-;End If
-ENDIF11:
-	RETURN
 
 ;********************************************************************************
 
@@ -352,6 +244,98 @@ BANKSEL	CM2CON0
 	CLRF	PORTB,ACCESS
 ;PORTC = 0
 	CLRF	PORTC,ACCESS
+	RETURN
+
+;********************************************************************************
+
+INTERRUPT:
+;USE AUTOMATIC CONTEXT SAVE FOR K42 AND K83 WITH MVECEN = OFF.  INTERRUPT PRIORITY NOT SUPPORTED
+;STORE SYSTEM VARIABLES
+	MOVFF	SYSTEMP1,SAVESYSTEMP1
+	MOVFF	DELAYTEMP2,SAVEDELAYTEMP2
+	MOVFF	DELAYTEMP,SAVEDELAYTEMP
+;ON INTERRUPT HANDLERS
+;A8: ASM Source was:  BTFSS PIE0,IOCIE,ACCESS
+	BTFSS	PIE0,7,ACCESS
+	BRA	NOTIOCIF
+;A8: ASM Source was:  BTFSS PIR0,IOCIF,ACCESS
+	BTFSS	PIR0,7,ACCESS
+	BRA	NOTIOCIF
+	RCALL	INTERRUPTHANDLER
+;A8: ASM Source was:  BCF PIR0,IOCIF,ACCESS
+	BCF	PIR0,7,ACCESS
+	BRA	INTERRUPTDONE
+NOTIOCIF:
+;USER INTERRUPT ROUTINE
+INTERRUPTDONE:
+;RESTORE CONTEXT
+;RESTORE SYSTEM VARIABLES
+	MOVFF	SAVESYSTEMP1,SYSTEMP1
+	MOVFF	SAVEDELAYTEMP2,DELAYTEMP2
+	MOVFF	SAVEDELAYTEMP,DELAYTEMP
+	RETFIE	1
+
+;********************************************************************************
+
+;SOURCE: 170_USING_EXTERNAL_INTERRUPT_TO_RAISE_AN_EVENT.GCB (67)
+INTERRUPTHANDLER:
+;If IOCIF = 1 Then
+;A8: ASM Source was:  BTFSS PIR0,IOCIF,ACCESS
+	BTFSS	PIR0,7,ACCESS
+	BRA	ENDIF1
+;Is this our event?
+;We must clear the flag in software
+;IOCAF3  = 0
+BANKSEL	IOCAF
+;A8: ASM Source was:  BCF IOCAF,IOCAF3,BANKED
+	BCF	IOCAF,3,BANKED
+;Save the state
+;SWState = RC2
+	BCF	SYSBITVAR0,0,ACCESS
+;A8: ASM Source was:  BTFSC PORTC,RC2,ACCESS
+	BTFSC	PORTC,2,ACCESS
+	BSF	SYSBITVAR0,0,ACCESS
+;Toggle the LED
+;RC1 = !RC1
+	CLRF	SYSTEMP1,ACCESS
+;A8: ASM Source was:  BTFSC PORTC,RC1,ACCESS
+	BTFSC	PORTC,1,ACCESS
+	INCF	SYSTEMP1,F,ACCESS
+	COMF	SYSTEMP1,F,ACCESS
+;A8: ASM Source was:  BCF LATC,RC1,ACCESS
+	BCF	LATC,1,ACCESS
+	BTFSC	SYSTEMP1,0,ACCESS
+;A8: ASM Source was:  BSF LATC,RC1,ACCESS
+	BSF	LATC,1,ACCESS
+;a little delay
+;wait 100 us
+	MOVLW	2
+	MOVWF	DELAYTEMP2,ACCESS
+DELAYUSO1:
+	CLRF	DELAYTEMP,ACCESS
+DELAYUS1:
+	DECFSZ	DELAYTEMP,F,ACCESS
+	BRA	DELAYUS1
+	DECFSZ	DELAYTEMP2,F,ACCESS
+	BRA	DELAYUSO1
+	MOVLW	19
+	MOVWF	DELAYTEMP,ACCESS
+DELAYUS2:
+	DECFSZ	DELAYTEMP,F,ACCESS
+	BRA	DELAYUS2
+;Wait while SWITCHIN = SWState
+SYSWAITLOOP1:
+	CLRF	WREG,ACCESS
+	BTFSC	PORTA,3,ACCESS
+	XORLW	255
+	BTFSC	SYSBITVAR0,0,ACCESS
+	XORLW	255
+;A8: ASM Source was:  BTFSC STATUS,Z,ACCESS
+	BTFSC	STATUS,2,ACCESS
+	BRA	SYSWAITLOOP1
+;End If
+ENDIF1:
+	BANKSEL	0
 	RETURN
 
 ;********************************************************************************

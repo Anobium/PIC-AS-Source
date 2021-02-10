@@ -9,7 +9,7 @@
 ;PROCESSOR   18F16Q41
  PAGEWIDTH   132
  RADIX       DEC
- TITLE       "D:\GCB@Syn39\GreatCowBasic\Demos\vendor_boards\microchip_low_pin_count_demo_board\pickit2_board\18f16q41\060_variable_rotate_the_leds.S"
+ TITLE       "D:\GCB@Syn39\GreatCowBasic\Demos\vendor_boards\microchip_low_pin_count_demo_board\pickit2_board\18f16q41\120_use_pwm_via_ccp_and_adc_to_control_led_brightness.S"
  SUBTITLE    "02-10-2021"
 
 ; Reverse lookup file
@@ -66,8 +66,8 @@
 
 ;Set aside RAM memory locations for variables. All variables are global.
  ADCVAL                           EQU 1293                    ; 0X50D
- ADCVAL_H                         EQU 1294                    ; 0X50E
- ADREADPORT                       EQU 1295                    ; 0X50F
+ ADREADPORT                       EQU 1294                    ; 0X50E
+ CCPCONCACHE                      EQU 1295                    ; 0X50F
  DELAYTEMP                        EQU 1280                    ; 0X500
  DELAYTEMP2                       EQU 1281                    ; 0X501
  L_CALIBRATE                      EQU 1296                    ; 0X510
@@ -88,24 +88,33 @@
  L_TOHIGH_H                       EQU 1311                    ; 0X51F
  L_TOLOW                          EQU 1312                    ; 0X520
  L_TOLOW_H                        EQU 1313                    ; 0X521
- READAD12                         EQU 1314                    ; 0X522
- READAD12_H                       EQU 1315                    ; 0X523
- SCALE                            EQU 1316                    ; 0X524
- SCALE_H                          EQU 1317                    ; 0X525
+ PRX_TEMP                         EQU 1314                    ; 0X522
+ PRX_TEMP_E                       EQU 1317                    ; 0X525
+ PRX_TEMP_H                       EQU 1315                    ; 0X523
+ PRX_TEMP_U                       EQU 1316                    ; 0X524
+ PWMCHANNEL                       EQU 1318                    ; 0X526
+ PWMDUTY                          EQU 1319                    ; 0X527
+ PWMDUTY_H                        EQU 1320                    ; 0X528
+ PWMFREQ                          EQU 1321                    ; 0X529
+ PWMRESOLUTION                    EQU 1322                    ; 0X52A
+ PWMRESOLUTION_H                  EQU 1323                    ; 0X52B
+ READAD                           EQU 1324                    ; 0X52C
+ SCALE                            EQU 1325                    ; 0X52D
+ SCALE_H                          EQU 1326                    ; 0X52E
  SYSBYTETEMPX                     EQU 1280                    ; 0X500
  SYSDIVLOOP                       EQU 1284                    ; 0X504
- SYSLONGDIVMULTA                  EQU 1318                    ; 0X526
- SYSLONGDIVMULTA_E                EQU 1321                    ; 0X529
- SYSLONGDIVMULTA_H                EQU 1319                    ; 0X527
- SYSLONGDIVMULTA_U                EQU 1320                    ; 0X528
- SYSLONGDIVMULTB                  EQU 1322                    ; 0X52A
- SYSLONGDIVMULTB_E                EQU 1325                    ; 0X52D
- SYSLONGDIVMULTB_H                EQU 1323                    ; 0X52B
- SYSLONGDIVMULTB_U                EQU 1324                    ; 0X52C
- SYSLONGDIVMULTX                  EQU 1326                    ; 0X52E
- SYSLONGDIVMULTX_E                EQU 1329                    ; 0X531
- SYSLONGDIVMULTX_H                EQU 1327                    ; 0X52F
- SYSLONGDIVMULTX_U                EQU 1328                    ; 0X530
+ SYSLONGDIVMULTA                  EQU 1327                    ; 0X52F
+ SYSLONGDIVMULTA_E                EQU 1330                    ; 0X532
+ SYSLONGDIVMULTA_H                EQU 1328                    ; 0X530
+ SYSLONGDIVMULTA_U                EQU 1329                    ; 0X531
+ SYSLONGDIVMULTB                  EQU 1331                    ; 0X533
+ SYSLONGDIVMULTB_E                EQU 1334                    ; 0X536
+ SYSLONGDIVMULTB_H                EQU 1332                    ; 0X534
+ SYSLONGDIVMULTB_U                EQU 1333                    ; 0X535
+ SYSLONGDIVMULTX                  EQU 1335                    ; 0X537
+ SYSLONGDIVMULTX_E                EQU 1338                    ; 0X53A
+ SYSLONGDIVMULTX_H                EQU 1336                    ; 0X538
+ SYSLONGDIVMULTX_U                EQU 1337                    ; 0X539
  SYSLONGTEMPA                     EQU 1285                    ; 0X505
  SYSLONGTEMPA_E                   EQU 1288                    ; 0X508
  SYSLONGTEMPA_H                   EQU 1286                    ; 0X506
@@ -118,24 +127,26 @@
  SYSLONGTEMPX_E                   EQU 1283                    ; 0X503
  SYSLONGTEMPX_H                   EQU 1281                    ; 0X501
  SYSLONGTEMPX_U                   EQU 1282                    ; 0X502
- SYSTEMP1                         EQU 1330                    ; 0X532
- SYSTEMP1_E                       EQU 1333                    ; 0X535
- SYSTEMP1_H                       EQU 1331                    ; 0X533
- SYSTEMP1_U                       EQU 1332                    ; 0X534
- SYSTEMP2                         EQU 1334                    ; 0X536
- SYSTEMP2_H                       EQU 1335                    ; 0X537
+ SYSREPEATTEMP1                   EQU 1339                    ; 0X53B
+ SYSTEMP1                         EQU 1340                    ; 0X53C
+ SYSTEMP1_E                       EQU 1343                    ; 0X53F
+ SYSTEMP1_H                       EQU 1341                    ; 0X53D
+ SYSTEMP1_U                       EQU 1342                    ; 0X53E
+ SYSTEMP2                         EQU 1344                    ; 0X540
+ SYSTEMP2_H                       EQU 1345                    ; 0X541
  SYSWAITTEMP10US                  EQU 1285                    ; 0X505
  SYSWAITTEMPMS                    EQU 1282                    ; 0X502
  SYSWAITTEMPMS_H                  EQU 1283                    ; 0X503
- SYSWAITTEMPS                     EQU 1284                    ; 0X504
+ TIMERSELECTIONBITS               EQU 1346                    ; 0X542
+ TX_PR                            EQU 1347                    ; 0X543
+ _PWMTIMERSELECTED                EQU 1348                    ; 0X544
 
 ;********************************************************************************
 
 ;ALIAS VARIABLES
- SYSREADAD12WORD                  EQU 1314
- SYSREADAD12WORD_H                EQU 1315
- SYSSCALEWORD                     EQU 1316
- SYSSCALEWORD_H                   EQU 1317
+ SYSREADADBYTE                    EQU 1324
+ SYSSCALEWORD                     EQU 1325
+ SYSSCALEWORD_H                   EQU 1326
 
 ;********************************************************************************
 
@@ -154,19 +165,28 @@
 BASPROGRAMSTART:
 ;CALL INITIALISATION ROUTINES
 	RCALL	INITSYS
+	RCALL	INITPPS
+	RCALL	INITPWM
 
 ;START OF THE MAIN PROGRAM
 ;''
-;'' This shows how to read the ADC converter and display the
-;'' a proportional delay value by changing/inverting the LEDs state.
-;'' The pot on the board varies the voltage coming in from the ADC.
+;''  This demonstration flashes an LED to show the use of CCP PWM operations
 ;''
-;'' The ADC is referenced to the same Vdd as the device, which
-;'' is nominally is 5V.  The ADC returns the ratio of the voltage
-;'' on Pin RA0 to 5V.  The ADC has a resolution of 12 bits, with 4095
-;'' representing 5V and 0 representing 0V.
+;'' Pulse-Width Modulation (PWM) is a scheme that provides power to a load by switching
+;'' quickly between fully on and fully off states. The PWM signal resembles a square wave
+;'' where the high portion of the signal is considered the on state and the low portion of
+;'' the signal is considered the off state. The high portion, also known as the pulse width,
+;'' can vary in time and is defined in steps. A longer, high on time will illuminate the LED
+;'' brighter. The frequency or period of the PWM does not change. A larger number of
+;'' steps applied, which lengthens the pulse width, also supplies more power to the load.
+;'' Lowering the number of steps applied, which shortens the pulse width, supplies less
+;'' power. The PWM period is defined as the duration of one complete cycle or the total
+;'' amount of on and off time combined.
 ;''
-;'' Rotate the potentiometer to change the LEDs displayed.
+;'' This demonstation shows a how the changing PWM values can dim the LED
+;''
+;'' This demonstration uses CCP3. This is logically connect to Portb.5 and therefore the RC2
+;''
 ;''
 ;''************************************************************************
 ;''@author  EvanV
@@ -175,9 +195,18 @@ BASPROGRAMSTART:
 ;''@date    31.12.2020
 ;----- Configuration
 ;Chip Settings.
+;Generated by PIC PPS Tool for Great Cow Basic
+;PPS Tool version: 0.0.6.2
+;PinManager data: v1.81.0
+;Generated for 18f16q41
+;
+;Template comment at the start of the config file
+;
+;#define PPSToolPart 18f16q41
+;Template comment at the end of the config file
 ;' -------------------PORTA----------------
 ;' Bit#:  -7---6---5---4---3---2---1---0---
-;' IO:   -----------------------------ADC--
+;' IO:   -----------------SW----------ADC--
 ;'-----------------------------------------
 ;'
 ;' -------------------PORTB----------------
@@ -187,7 +216,7 @@ BASPROGRAMSTART:
 ;'
 ;' ------------------PORTC-----------------
 ;' Bit#:  -7---6---5---4---3---2---1---0---
-;' IO:    ---------------LED--LED-LED-LED--
+;' IO:    ---------------LED--LED-LED LED--
 ;'-----------------------------------------
 ;'
 ;Define constants to make things easier. We can reuse these at any time.
@@ -203,178 +232,240 @@ BASPROGRAMSTART:
 ;#DEFINE POTENTIOMETER PORTA.0
 ;Dir     POTENTIOMETER In
 	BSF	TRISA,0,ACCESS
+;#DEFINE SWITCHIN      PORTA.3
+;Dir     SWITCHIN      In
+	BSF	TRISA,3,ACCESS
 ;*****************************************************************************************************
 ;Main program commences here.. everything before this is setup for the board.
-;Set the initial LED states - change to suit your configuration
-;#DEFINE LEDSTATEMACRO RC0 = 0: RC1 = 0: RC2 = 0: RC3 = 1
-;You may need change to the LEDMASK to suit your port/configuration.  We use a macro as re reuse this statement more that once.
-;#DEFINE LEDMASK 0B00001111
-;LEDSTATEMACRO
-;A8: ASM Source was:  BCF LATC,RC0,ACCESS
-	BCF	LATC,0,ACCESS
-;A8: ASM Source was:  BCF LATC,RC1,ACCESS
-	BCF	LATC,1,ACCESS
-;A8: ASM Source was:  BCF LATC,RC2,ACCESS
-	BCF	LATC,2,ACCESS
-;A8: ASM Source was:  BSF LATC,RC3,ACCESS
-	BSF	LATC,3,ACCESS
-;Wait 1 s
-	MOVLW	1
-	MOVWF	SYSWAITTEMPS,ACCESS
-	RCALL	DELAY_S
-;we have change to a larger variable to hold the range of 0 to 4095
-;Dim ADCVal As Word
+;Dim ADCVal, MaxVal as byte
+;Using ADC value to set the CCP/PWM
 ;Do
 SYSDOLOOP_S1:
-;ADCVal = ReadAD12 ( AN0 )
+;HPWM CCPchannel, frequency, duty cycle
+;ADCVal = ReadAD( AN0 )
 	CLRF	ADREADPORT,ACCESS
-	RCALL	FN_READAD128
-	MOVFF	SYSREADAD12WORD,ADCVAL
-	MOVFF	SYSREADAD12WORD_H,ADCVAL_H
-;ADCVal = Scale ( ADCVal, 0, 4095, 2, 100 )
+	RCALL	FN_READAD5
+	MOVFF	SYSREADADBYTE,ADCVAL
+;ADCVal = Scale ( ADCVal, 0 , 210, 0, 255 )
 	MOVFF	ADCVAL,L_MAP
-	MOVFF	ADCVAL_H,L_MAP_H
+	CLRF	L_MAP_H,ACCESS
 	CLRF	L_FROMLOW,ACCESS
 	CLRF	L_FROMLOW_H,ACCESS
-	SETF	L_FROMHIGH,ACCESS
-	MOVLW	15
-	MOVWF	L_FROMHIGH_H,ACCESS
-	MOVLW	2
-	MOVWF	L_TOLOW,ACCESS
+	MOVLW	210
+	MOVWF	L_FROMHIGH,ACCESS
+	CLRF	L_FROMHIGH_H,ACCESS
+	CLRF	L_TOLOW,ACCESS
 	CLRF	L_TOLOW_H,ACCESS
-	MOVLW	100
-	MOVWF	L_TOHIGH,ACCESS
+	SETF	L_TOHIGH,ACCESS
 	CLRF	L_TOHIGH_H,ACCESS
 	CLRF	L_CALIBRATE,ACCESS
 	CLRF	L_CALIBRATE_H,ACCESS
-	RCALL	FN_SCALE72
+	RCALL	FN_SCALE73
 	MOVFF	SYSSCALEWORD,ADCVAL
-	MOVFF	SYSSCALEWORD_H,ADCVAL_H
-;Wait for the number of milliseconds
-;Wait ADCVal ms
-	MOVFF	ADCVAL,SYSWAITTEMPMS
-	MOVFF	ADCVAL_H,SYSWAITTEMPMS_H
+;Wait 10 ms
+	MOVLW	10
+	MOVWF	SYSWAITTEMPMS,ACCESS
+	CLRF	SYSWAITTEMPMS_H,ACCESS
 	RCALL	DELAY_MS
-;Rotate the LEDs.  We are only interested in the four LEDs so we mask the other bits.
-;Set C Off
-;A8: ASM Source was:  BCF STATUS,C,ACCESS
-	BCF	STATUS,0,ACCESS
-;and shift the contents of LEDState
-;Rotate LEDPORT Right
-	RRCF	LATC,F,ACCESS
-;If the LEDState.0is equal to 1 then the sequence has completed, then set the initial state again, the same operation as the starting LED.
-;If C = 1 Then
-;A8: ASM Source was:  BTFSS STATUS,C,ACCESS
-	BTFSS	STATUS,0,ACCESS
-	BRA	ENDIF1
-;Set the initial LED states
-;LEDSTATEMACRO
-;A8: ASM Source was:  BCF LATC,RC0,ACCESS
-	BCF	LATC,0,ACCESS
-;A8: ASM Source was:  BCF LATC,RC1,ACCESS
-	BCF	LATC,1,ACCESS
-;A8: ASM Source was:  BCF LATC,RC2,ACCESS
-	BCF	LATC,2,ACCESS
-;A8: ASM Source was:  BSF LATC,RC3,ACCESS
-	BSF	LATC,3,ACCESS
-;Mask off the other bits
-;LEDPORT = LEDPORT AND LEDMASK
-	MOVLW	15
-	ANDWF	LATC,F,ACCESS
-;End If
-ENDIF1:
+;HPWM ( 1, 20, ADCVal )
+	MOVLW	1
+	MOVWF	PWMCHANNEL,ACCESS
+	MOVLW	20
+	MOVWF	PWMFREQ,ACCESS
+	MOVFF	ADCVAL,PWMDUTY
+	CLRF	PWMDUTY_H,ACCESS
+	RCALL	HPWM25
+	MOVFF	PWMDUTY,ADCVAL
 ;Loop
 	BRA	SYSDOLOOP_S1
 SYSDOLOOP_E1:
-;'' GCB Optimisation file
+;Code optimisation - to reduce code size - this needs to match out program. So, look for the TRUEs
+;This is not used so optimise
+;#DEFINE USE_HPWMCCP1 TRUE
+;This is not used so optimise
+;#DEFINE USE_HPWMCCP2 FALSE
+;This is used so include in the compiled code
+;#DEFINE USE_HPWMCCP3 FALSE
+;This is not used so optimise
+;#DEFINE USE_HPWMCCP4 FALSE
+;This is not used so optimise
+;#DEFINE USE_HPWMCCP5 FALSE
+;This is used so include in the compiled code
+;#DEFINE USE_HPWM_TIMER2 TRUE
+;#DEFINE USE_HPWM_TIMER4 FALSE
+;#DEFINE USE_HPWM_TIMER6 FALSE
+;#DEFINE USE_HPWM_TIMER7 FALSE
 ;Optimise A-d.h
 ;Standard family chips
-;#define USE_AD0 TRUE
-;#define USE_AD1 FALSE
-;#define USE_AD2 FALSE
-;#define USE_AD2 FALSE
-;#define USE_AD3 FALSE
-;#define USE_AD4 FALSE
-;#define USE_AD5 FALSE
-;#define USE_AD6 FALSE
-;#define USE_AD7 FALSE
-;#define USE_AD8 FALSE
-;#define USE_AD9 FALSE
-;#define USE_AD10 FALSE
-;#define USE_AD11 FALSE
-;#define USE_AD12 FALSE
-;#define USE_AD13 FALSE
-;#define USE_AD14 FALSE
-;#define USE_AD15 FALSE
-;#define USE_AD16 FALSE
-;#define USE_AD17 FALSE
-;#define USE_AD18 FALSE
-;#define USE_AD19 FALSE
-;#define USE_AD20 FALSE
-;#define USE_AD21 FALSE
-;#define USE_AD22 FALSE
-;#define USE_AD23 FALSE
-;#define USE_AD24 FALSE
-;#define USE_AD25 FALSE
-;#define USE_AD26 FALSE
-;#define USE_AD27 FALSE
-;#define USE_AD28 FALSE
-;#define USE_AD29 FALSE
-;#define USE_AD30 FALSE
-;#define USE_AD31 FALSE
-;#define USE_AD32 FALSE
-;#define USE_AD33 FALSE
-;#define USE_AD34 FALSE
+;#DEFINE USE_AD0 TRUE
+;#DEFINE USE_AD1 FALSE
+;#DEFINE USE_AD2 FALSE
+;#DEFINE USE_AD2 FALSE
+;#DEFINE USE_AD3 FALSE
+;#DEFINE USE_AD4 FALSE
+;#DEFINE USE_AD5 FALSE
+;#DEFINE USE_AD6 FALSE
+;#DEFINE USE_AD7 FALSE
+;#DEFINE USE_AD8 FALSE
+;#DEFINE USE_AD9 FALSE
+;#DEFINE USE_AD10 FALSE
+;#DEFINE USE_AD11 FALSE
+;#DEFINE USE_AD12 FALSE
+;#DEFINE USE_AD13 FALSE
+;#DEFINE USE_AD14 FALSE
+;#DEFINE USE_AD15 FALSE
+;#DEFINE USE_AD16 FALSE
+;This is used so include in the compiled code
+;#DEFINE USE_AD17 FALSE
+;#DEFINE USE_AD18 FALSE
+;#DEFINE USE_AD19 FALSE
+;#DEFINE USE_AD20 FALSE
+;#DEFINE USE_AD21 FALSE
+;#DEFINE USE_AD22 FALSE
+;#DEFINE USE_AD23 FALSE
+;#DEFINE USE_AD24 FALSE
+;#DEFINE USE_AD25 FALSE
+;#DEFINE USE_AD26 FALSE
+;#DEFINE USE_AD27 FALSE
+;#DEFINE USE_AD28 FALSE
+;#DEFINE USE_AD29 FALSE
+;#DEFINE USE_AD30 FALSE
+;#DEFINE USE_AD31 FALSE
+;#DEFINE USE_AD32 FALSE
+;#DEFINE USE_AD33 FALSE
+;#DEFINE USE_AD34 FALSE
 ;Family of chips based on 16f1688x with ADCON3 register
-;#define USE_ADA0 FALSE
-;#define USE_ADA1 FALSE
-;#define USE_ADA2 FALSE
-;#define USE_ADA3 FALSE
-;#define USE_ADA4 FALSE
-;#define USE_ADA5 FALSE
-;#define USE_ADA6 FALSE
-;#define USE_ADA7 FALSE
-;#define USE_ADB0 FALSE
-;#define USE_ADB1 FALSE
-;#define USE_ADB2 FALSE
-;#define USE_ADB3 FALSE
-;#define USE_ADB4 FALSE
-;#define USE_ADB5 FALSE
-;#define USE_ADB6 FALSE
-;#define USE_ADB7 FALSE
-;#define USE_ADC0 FALSE
-;#define USE_ADC1 FALSE
-;#define USE_ADC2 FALSE
-;#define USE_ADC3 FALSE
-;#define USE_ADC4 FALSE
-;#define USE_ADC5 FALSE
-;#define USE_ADC6 FALSE
-;#define USE_ADC7 FALSE
-;#define USE_ADD0 FALSE
-;#define USE_ADD1 FALSE
-;#define USE_ADD2 FALSE
-;#define USE_ADD3 FALSE
-;#define USE_ADD4 FALSE
-;#define USE_ADD5 FALSE
-;#define USE_ADD6 FALSE
-;#define USE_ADD7 FALSE
-;#define USE_ADE0 FALSE
-;#define USE_ADE1 FALSE
-;#define USE_ADE2 FALSE
+;#DEFINE USE_ADA0 FALSE
+;#DEFINE USE_ADA1 FALSE
+;#DEFINE USE_ADA2 FALSE
+;#DEFINE USE_ADA3 FALSE
+;#DEFINE USE_ADA4 FALSE
+;#DEFINE USE_ADA5 FALSE
+;#DEFINE USE_ADA6 FALSE
+;#DEFINE USE_ADA7 FALSE
+;#DEFINE USE_ADB0 FALSE
+;#DEFINE USE_ADB1 FALSE
+;#DEFINE USE_ADB2 FALSE
+;#DEFINE USE_ADB3 FALSE
+;#DEFINE USE_ADB4 FALSE
+;#DEFINE USE_ADB5 FALSE
+;#DEFINE USE_ADB6 FALSE
+;#DEFINE USE_ADB7 FALSE
+;#DEFINE USE_ADC0 FALSE
+;#DEFINE USE_ADC1 FALSE
+;#DEFINE USE_ADC2 FALSE
+;#DEFINE USE_ADC3 FALSE
+;#DEFINE USE_ADC4 FALSE
+;#DEFINE USE_ADC5 FALSE
+;#DEFINE USE_ADC6 FALSE
+;#DEFINE USE_ADC7 FALSE
+;#DEFINE USE_ADD0 FALSE
+;#DEFINE USE_ADD1 FALSE
+;#DEFINE USE_ADD2 FALSE
+;#DEFINE USE_ADD3 FALSE
+;#DEFINE USE_ADD4 FALSE
+;#DEFINE USE_ADD5 FALSE
+;#DEFINE USE_ADD6 FALSE
+;#DEFINE USE_ADD7 FALSE
+;#DEFINE USE_ADE0 FALSE
+;#DEFINE USE_ADE1 FALSE
+;#DEFINE USE_ADE2 FALSE
 BASPROGRAMEND:
 	SLEEP
 	BRA	BASPROGRAMEND
 
 ;********************************************************************************
 
+;SOURCE: PWM.H (4412)
+CALCULATEDUTY:
+;dim PRx_Temp as long
+;dim PWMDuty as word
+;dim PWMResolution as word
+;assumes PRx_Temp and PWMDuty are valid
+;PRx_Temp = PWMDuty  * ( PRx_Temp + 1 )
+	MOVLW	1
+	ADDWF	PRX_TEMP,W,ACCESS
+	MOVWF	SYSTEMP1,ACCESS
+	MOVLW	0
+	ADDWFC	PRX_TEMP_H,W,ACCESS
+	MOVWF	SYSTEMP1_H,ACCESS
+	MOVLW	0
+	ADDWFC	PRX_TEMP_U,W,ACCESS
+	MOVWF	SYSTEMP1_U,ACCESS
+	MOVLW	0
+	ADDWFC	PRX_TEMP_E,W,ACCESS
+	MOVWF	SYSTEMP1_E,ACCESS
+	MOVFF	PWMDUTY,SYSLONGTEMPA
+	MOVFF	PWMDUTY_H,SYSLONGTEMPA_H
+	CLRF	SYSLONGTEMPA_U,ACCESS
+	CLRF	SYSLONGTEMPA_E,ACCESS
+	MOVFF	SYSTEMP1,SYSLONGTEMPB
+	MOVFF	SYSTEMP1_H,SYSLONGTEMPB_H
+	MOVFF	SYSTEMP1_U,SYSLONGTEMPB_U
+	MOVFF	SYSTEMP1_E,SYSLONGTEMPB_E
+	RCALL	SYSMULTSUB32
+	MOVFF	SYSLONGTEMPX,PRX_TEMP
+	MOVFF	SYSLONGTEMPX_H,PRX_TEMP_H
+	MOVFF	SYSLONGTEMPX_U,PRX_TEMP_U
+	MOVFF	SYSLONGTEMPX_E,PRX_TEMP_E
+;Set C off
+;A8: ASM Source was:  BCF STATUS,C,ACCESS
+	BCF	STATUS,0,ACCESS
+;Repeat 2
+	MOVLW	2
+	MOVWF	SYSREPEATTEMP1,ACCESS
+SYSREPEATLOOP1:
+;rotate PRx_Temp left
+	RLCF	PRX_TEMP,F,ACCESS
+	RLCF	PRX_TEMP_H,F,ACCESS
+	RLCF	PRX_TEMP_U,F,ACCESS
+	RLCF	PRX_TEMP_E,F,ACCESS
+;End Repeat
+	DECFSZ	SYSREPEATTEMP1,F,ACCESS
+	BRA	SYSREPEATLOOP1
+SYSREPEATLOOPEND1:
+;PRx_Temp = PRx_Temp / PWMResolution    'where PWMResolution is 255 or 1023
+	MOVFF	PRX_TEMP,SYSLONGTEMPA
+	MOVFF	PRX_TEMP_H,SYSLONGTEMPA_H
+	MOVFF	PRX_TEMP_U,SYSLONGTEMPA_U
+	MOVFF	PRX_TEMP_E,SYSLONGTEMPA_E
+	MOVFF	PWMRESOLUTION,SYSLONGTEMPB
+	MOVFF	PWMRESOLUTION_H,SYSLONGTEMPB_H
+	CLRF	SYSLONGTEMPB_U,ACCESS
+	CLRF	SYSLONGTEMPB_E,ACCESS
+	RCALL	SYSDIVSUB32
+	MOVFF	SYSLONGTEMPA,PRX_TEMP
+	MOVFF	SYSLONGTEMPA_H,PRX_TEMP_H
+	MOVFF	SYSLONGTEMPA_U,PRX_TEMP_U
+	MOVFF	SYSLONGTEMPA_E,PRX_TEMP_E
+;Set C off
+;A8: ASM Source was:  BCF STATUS,C,ACCESS
+	BCF	STATUS,0,ACCESS
+;Repeat 6
+	MOVLW	6
+	MOVWF	SYSREPEATTEMP1,ACCESS
+SYSREPEATLOOP2:
+;rotate PRx_Temp left
+	RLCF	PRX_TEMP,F,ACCESS
+	RLCF	PRX_TEMP_H,F,ACCESS
+	RLCF	PRX_TEMP_U,F,ACCESS
+	RLCF	PRX_TEMP_E,F,ACCESS
+;End Repeat
+	DECFSZ	SYSREPEATTEMP1,F,ACCESS
+	BRA	SYSREPEATLOOP2
+SYSREPEATLOOPEND2:
+;exits with PRx_Temp calculated
+	RETURN
+
+;********************************************************************************
+
 DELAY_10US:
 D10US_START:
-	MOVLW	5
+	MOVLW	52
 	MOVWF	DELAYTEMP,ACCESS
 DELAYUS0:
 	DECFSZ	DELAYTEMP,F,ACCESS
 	BRA	DELAYUS0
-	NOP
 	DECFSZ	SYSWAITTEMP10US, F,ACCESS
 	BRA	D10US_START
 	RETURN
@@ -384,10 +475,10 @@ DELAYUS0:
 DELAY_MS:
 	INCF	SYSWAITTEMPMS_H, F,ACCESS
 DMS_START:
-	MOVLW	4
+	MOVLW	129
 	MOVWF	DELAYTEMP2,ACCESS
 DMS_OUTER:
-	MOVLW	165
+	MOVLW	40
 	MOVWF	DELAYTEMP,ACCESS
 DMS_INNER:
 	DECFSZ	DELAYTEMP, F,ACCESS
@@ -402,15 +493,361 @@ DMS_INNER:
 
 ;********************************************************************************
 
-DELAY_S:
-DS_START:
-	MOVLW	232
-	MOVWF	SYSWAITTEMPMS,ACCESS
-	MOVLW	3
-	MOVWF	SYSWAITTEMPMS_H,ACCESS
-	RCALL	DELAY_MS
-	DECFSZ	SYSWAITTEMPS, F,ACCESS
-	BRA	DS_START
+;OVERLOADED SIGNATURE: BYTE:BYTE:BYTE:, SOURCE: PWM.H (2697)
+HPWM25:
+;Dim PRx_Temp as LONG
+;Dim PRx_Temp_Cache as Long
+;dim PWMDuty as word
+;dim PWMResolution as word: PWMResolution = 255
+	SETF	PWMRESOLUTION,ACCESS
+	CLRF	PWMRESOLUTION_H,ACCESS
+;If HPWM_FAST operation selected, only recalculate timer prescaler when
+;needed. Gives faster operation, but uses extra byte of RAM and may cause
+;problems if HPWM and PWMOn are used together in a program.
+;(No issues using HPWM and PWMOff in the same program with HPWM_FAST.)
+;Commence calculations of PMW parameters
+;This figures out Postscaler required.  We can set to 1, 4 or 16 to set Tx_PR
+;So, start with 1 - check the remainder. If the remainder in the high byte is greater then zero then do same with a prescaler value of 4
+;So, using 4 - check the remainder. If the remainder in the high byte is greater then zero then do same with a prescaler value of 16
+;So, using 16
+;This simply set Tx_PR to 1,4 or 16
+;Tx_PR = 1
+	MOVLW	1
+	MOVWF	TX_PR,ACCESS
+;PRx_Temp = PWMOsc1 / PWMFreq
+	MOVLW	128
+	MOVWF	SYSLONGTEMPA,ACCESS
+	MOVLW	62
+	MOVWF	SYSLONGTEMPA_H,ACCESS
+	CLRF	SYSLONGTEMPA_U,ACCESS
+	CLRF	SYSLONGTEMPA_E,ACCESS
+	MOVFF	PWMFREQ,SYSLONGTEMPB
+	CLRF	SYSLONGTEMPB_H,ACCESS
+	CLRF	SYSLONGTEMPB_U,ACCESS
+	CLRF	SYSLONGTEMPB_E,ACCESS
+	RCALL	SYSDIVSUB32
+	MOVFF	SYSLONGTEMPA,PRX_TEMP
+	MOVFF	SYSLONGTEMPA_H,PRX_TEMP_H
+	MOVFF	SYSLONGTEMPA_U,PRX_TEMP_U
+	MOVFF	SYSLONGTEMPA_E,PRX_TEMP_E
+;IF PRx_Temp_H > 0 then
+	MOVF	PRX_TEMP_H,W,ACCESS
+	SUBLW	0
+;A8: ASM Source was:  BTFSC STATUS, C,ACCESS
+	BTFSC	STATUS,0,ACCESS
+	BRA	ENDIF2
+;Tx_PR = 4
+	MOVLW	4
+	MOVWF	TX_PR,ACCESS
+;Divide by 4
+;set STATUS.C off
+;A8: ASM Source was:  BCF STATUS,C,ACCESS
+	BCF	STATUS,0,ACCESS
+;rotate PRx_Temp right
+	RRCF	PRX_TEMP_E,F,ACCESS
+	RRCF	PRX_TEMP_U,F,ACCESS
+	RRCF	PRX_TEMP_H,F,ACCESS
+	RRCF	PRX_TEMP,F,ACCESS
+;set STATUS.C off
+;A8: ASM Source was:  BCF STATUS,C,ACCESS
+	BCF	STATUS,0,ACCESS
+;rotate PRx_Temp right
+	RRCF	PRX_TEMP_E,F,ACCESS
+	RRCF	PRX_TEMP_U,F,ACCESS
+	RRCF	PRX_TEMP_H,F,ACCESS
+	RRCF	PRX_TEMP,F,ACCESS
+;end if
+ENDIF2:
+;IF PRx_Temp_H > 0 then
+	MOVF	PRX_TEMP_H,W,ACCESS
+	SUBLW	0
+;A8: ASM Source was:  BTFSC STATUS, C,ACCESS
+	BTFSC	STATUS,0,ACCESS
+	BRA	ENDIF3
+;Tx_PR = 16
+	MOVLW	16
+	MOVWF	TX_PR,ACCESS
+;Divide by 4
+;set STATUS.C off
+;A8: ASM Source was:  BCF STATUS,C,ACCESS
+	BCF	STATUS,0,ACCESS
+;rotate PRx_Temp right
+	RRCF	PRX_TEMP_E,F,ACCESS
+	RRCF	PRX_TEMP_U,F,ACCESS
+	RRCF	PRX_TEMP_H,F,ACCESS
+	RRCF	PRX_TEMP,F,ACCESS
+;set STATUS.C off
+;A8: ASM Source was:  BCF STATUS,C,ACCESS
+	BCF	STATUS,0,ACCESS
+;rotate PRx_Temp right
+	RRCF	PRX_TEMP_E,F,ACCESS
+	RRCF	PRX_TEMP_U,F,ACCESS
+	RRCF	PRX_TEMP_H,F,ACCESS
+	RRCF	PRX_TEMP,F,ACCESS
+;end if
+ENDIF3:
+;IF PRx_Temp_H > 0 then
+	MOVF	PRX_TEMP_H,W,ACCESS
+	SUBLW	0
+;A8: ASM Source was:  BTFSC STATUS, C,ACCESS
+	BTFSC	STATUS,0,ACCESS
+	BRA	ENDIF4
+;Tx_PR = 64
+	MOVLW	64
+	MOVWF	TX_PR,ACCESS
+;Divide by 4
+;set STATUS.C off
+;A8: ASM Source was:  BCF STATUS,C,ACCESS
+	BCF	STATUS,0,ACCESS
+;rotate PRx_Temp right
+	RRCF	PRX_TEMP_E,F,ACCESS
+	RRCF	PRX_TEMP_U,F,ACCESS
+	RRCF	PRX_TEMP_H,F,ACCESS
+	RRCF	PRX_TEMP,F,ACCESS
+;set STATUS.C off
+;A8: ASM Source was:  BCF STATUS,C,ACCESS
+	BCF	STATUS,0,ACCESS
+;rotate PRx_Temp right
+	RRCF	PRX_TEMP_E,F,ACCESS
+	RRCF	PRX_TEMP_U,F,ACCESS
+	RRCF	PRX_TEMP_H,F,ACCESS
+	RRCF	PRX_TEMP,F,ACCESS
+;end if
+ENDIF4:
+;added to handle different timer sources
+;added to support HPWM_CCPTimerN. Makes the code longer but more flexible
+;user optimisation to reduce code.
+CCPPWMSETUPCLOCKSOURCE:
+;select case _PWMTimerSelected
+;case 2:
+SYSSELECT2CASE1:
+	MOVLW	2
+	SUBWF	_PWMTIMERSELECTED,W,ACCESS
+;A8: ASM Source was:  BTFSS STATUS, Z,ACCESS
+	BTFSS	STATUS,2,ACCESS
+	BRA	SYSSELECTEND2
+;PR2 = PRx_Temp
+;A6: ASM Source was:  MOVFF PRX_TEMP,PR2
+	MOVFF	PRX_TEMP,T2PR
+;Set the Bits for the Postscaler
+;Setup Timerx by clearing the Prescaler bits - it is set next....
+;SET T2CKPS0 OFF
+BANKSEL	T2CON
+;A8: ASM Source was:  BCF T2CON,T2CKPS0,BANKED
+	BCF	T2CON,4,BANKED
+;SET T2CKPS1 OFF
+;A8: ASM Source was:  BCF T2CON,T2CKPS1,BANKED
+	BCF	T2CON,5,BANKED
+;SET T2CKPS2 OFF
+;A8: ASM Source was:  BCF T2CON,T2CKPS2,BANKED
+	BCF	T2CON,6,BANKED
+;Set Prescaler bits
+;if Tx_PR = 4  then SET T2CKPS1 ON
+	MOVLW	4
+	SUBWF	TX_PR,W,ACCESS
+;A8: ASM Source was:  BTFSC STATUS, Z,ACCESS
+	BTFSC	STATUS,2,ACCESS
+;A8: ASM Source was:  BSF T2CON,T2CKPS1,BANKED
+	BSF	T2CON,5,BANKED
+;if Tx_PR = 16 then SET T2CKPS2 ON
+	MOVLW	16
+	SUBWF	TX_PR,W,ACCESS
+;A8: ASM Source was:  BTFSC STATUS, Z,ACCESS
+	BTFSC	STATUS,2,ACCESS
+;A8: ASM Source was:  BSF T2CON,T2CKPS2,BANKED
+	BSF	T2CON,6,BANKED
+;if Tx_PR = 64 then SET T2CKPS2 ON: SET T2CKPS1 ON
+	MOVLW	64
+	SUBWF	TX_PR,W,ACCESS
+;A8: ASM Source was:  BTFSS STATUS, Z,ACCESS
+	BTFSS	STATUS,2,ACCESS
+	BRA	ENDIF7
+;A8: ASM Source was:  BSF T2CON,T2CKPS2,BANKED
+	BSF	T2CON,6,BANKED
+;A8: ASM Source was:  BSF T2CON,T2CKPS1,BANKED
+	BSF	T2CON,5,BANKED
+ENDIF7:
+;Revised to show overflow issue
+;Set Clock Source, if required
+;Set to FOSC/4 for backward compatibility
+;T2CLKCON.T2CS0 = 1
+;A8: ASM Source was:  BSF T2CLKCON,T2CS0,BANKED
+	BSF	T2CLKCON,0,BANKED
+;T2CLKCON.T2CS1 = 0
+;A8: ASM Source was:  BCF T2CLKCON,T2CS1,BANKED
+	BCF	T2CLKCON,1,BANKED
+;T2CLKCON.T2CS2 = 0
+;A8: ASM Source was:  BCF T2CLKCON,T2CS2,BANKED
+	BCF	T2CLKCON,2,BANKED
+;T2CLKCON.T2CS3 = 0
+;A8: ASM Source was:  BCF T2CLKCON,T2CS3,BANKED
+	BCF	T2CLKCON,3,BANKED
+;end Select
+SYSSELECTEND2:
+END_OF_CCPPWMSETUPCLOCKSOURCE:
+;this code can be optimised by using defines USE_HPWMCCP1|2|3|4|5
+;and, you can define user setup and exit commands using AddHPWMCCPSetupN and  AddHPWMCCPExitN
+;These can be used to FIX little errors!
+SETUPTHECORRECTTIMERBITS:
+;ChipPWMTimerVariant some chips have variants on CCPTMRS0
+;TimerSelectionBits =  (_PWMTimerSelected / 2 )-1
+;A8: ASM Source was:  BCF STATUS,C,ACCESS
+	BCF	STATUS,0,ACCESS
+	RRCF	_PWMTIMERSELECTED,W,ACCESS
+	MOVWF	SYSTEMP1,ACCESS
+	DECF	SYSTEMP1,W,ACCESS
+	MOVWF	TIMERSELECTIONBITS,ACCESS
+SETUPCCPPWMREGISTERS:
+;Identify the Q41 chip that only has ONE CCP1PMW
+;calculateDuty 'Sets PRx_Temp  to the duty value for bits 15-8 and 7-6
+	BANKSEL	0
+	RCALL	CALCULATEDUTY
+;CCPR1H = PRx_Temp_H
+	MOVFF	PRX_TEMP_H,CCPR1H
+;CCPR1L = PRx_Temp
+;A6: ASM Source was:  MOVFF PRX_TEMP,CCPR1L
+	MOVFF	PRX_TEMP,CCPR1
+;SET CCP1M3 ON
+BANKSEL	CCP1CON
+;A8: ASM Source was:  BSF CCP1CON,CCP1MODE3,BANKED
+	BSF	CCP1CON,3,BANKED
+;SET CCP1M2 ON
+;A8: ASM Source was:  BSF CCP1CON,CCP1MODE2,BANKED
+	BSF	CCP1CON,2,BANKED
+;SET CCP1M1 ON
+;A8: ASM Source was:  BSF CCP1CON,CCP1MODE1,BANKED
+	BSF	CCP1CON,1,BANKED
+;SET CCP1M0 ON
+;A8: ASM Source was:  BSF CCP1CON,CCP1MODE0,BANKED
+	BSF	CCP1CON,0,BANKED
+;SET CCP1EN ON
+;A8: ASM Source was:  BSF CCP1CON,CCP1EN,BANKED
+	BSF	CCP1CON,7,BANKED
+;SET CCP1CON_EN ON
+;A8: ASM Source was:  BSF CCP1CON,CCP1CON_EN,BANKED
+	BSF	CCP1CON,7,BANKED
+;SET CCP1FMT ON
+;A8: ASM Source was:  BSF CCP1CON,CCP1FMT,BANKED
+	BSF	CCP1CON,4,BANKED
+	BANKSEL	0
+	RETURN
+
+;********************************************************************************
+
+;SOURCE: 120_USE_PWM_VIA_CCP_AND_ADC_TO_CONTROL_LED_BRIGHTNESS.GCB (42)
+INITPPS:
+;Module: CCP1
+;RC0PPS = 0x0009    'CCP1 > RC0
+	MOVLW	9
+BANKSEL	RC0PPS
+	MOVWF	RC0PPS,BANKED
+;CCP1PPS = 0x0010    'RC0 > CCP1 (bi-directional)
+	MOVLW	16
+	MOVWF	CCP1PPS,BANKED
+;RC1PPS = 0x0009    'CCP1 > RC1
+	MOVLW	9
+	MOVWF	RC1PPS,BANKED
+;CCP1PPS = 0x0011    'RC1 > CCP1 (bi-directional)
+	MOVLW	17
+	MOVWF	CCP1PPS,BANKED
+;RC2PPS = 0x0009    'CCP1 > RC2
+	MOVLW	9
+	MOVWF	RC2PPS,BANKED
+;CCP1PPS = 0x0012    'RC2 > CCP1 (bi-directional)
+	MOVLW	18
+	MOVWF	CCP1PPS,BANKED
+;RC3PPS = 0x0009    'CCP1 > RC3
+	MOVLW	9
+	MOVWF	RC3PPS,BANKED
+;CCP1PPS = 0x0013    'RC3 > CCP1 (bi-directional)
+	MOVLW	19
+	MOVWF	CCP1PPS,BANKED
+	BANKSEL	0
+	RETURN
+
+;********************************************************************************
+
+;SOURCE: PWM.H (192)
+INITPWM:
+;_PWMTimerSelected = 2
+	MOVLW	2
+	MOVWF	_PWMTIMERSELECTED,ACCESS
+;Dim PRx_Temp as LONG
+;Script to calculate constants required for given Frequency and Duty Cycle
+LEGACY_STARTOFFIXEDCCPPWMMODECODE:
+;You can disable all the legacy CCPPWM fixed mode code to reduce program size
+;This section is Library code, so it generates ASM
+;This section uses the constants defined the script above.
+;Essentially, sets CCPCONCache with the bits set correctly.
+;And, timer 2.  Remember timer 2 can be the timer for CCP/PWM but the other timers can be specified for certain parts.
+;If CCP1CON does not exist then there is NO CCP1 so no point in setting, as all this is to set up the CCP1 using constants method
+;DIM CCPCONCache as BYTE
+;CCPCONCache = 0
+	CLRF	CCPCONCACHE,ACCESS
+;Set PWM Period
+;PR2 = PR2_CPP_PWM_Temp
+	MOVLW	105
+;A9: ASM Source was:  BANKSEL PR2
+BANKSEL	T2PR
+;A2: ASM Source was:  MOVWF PR2,BANKED
+;A4: ASM Source was:  MOVWF PR2,BANKED
+	MOVWF	T2PR,BANKED
+;SET T2CON.T2CKPS0 OFF
+;A8: ASM Source was:  BCF T2CON,T2CKPS0,BANKED
+	BCF	T2CON,4,BANKED
+;SET T2CON.T2CKPS1 ON
+;A8: ASM Source was:  BSF T2CON,T2CKPS1,BANKED
+	BSF	T2CON,5,BANKED
+;SET T2CON.T2CKPS2 OFF
+;A8: ASM Source was:  BCF T2CON,T2CKPS2,BANKED
+	BCF	T2CON,6,BANKED
+;Set Duty cycle
+;CCPCONCache.CCP1FMT = 1
+;A8: ASM Source was:  BSF CCPCONCACHE,CCP1FMT,ACCESS
+	BSF	CCPCONCACHE,4,ACCESS
+;CCPR1H = DutyCycleH
+	MOVLW	53
+	MOVWF	CCPR1H,BANKED
+;CCPR1L = DutyCycleL*64
+;A2: ASM Source was:  CLRF CCPR1L,BANKED
+;A4: ASM Source was:  CLRF CCPR1L,BANKED
+	CLRF	CCPR1,BANKED
+;[canskip]T2CLKCON = 1
+	MOVLW	1
+	MOVWF	T2CLKCON,BANKED
+;[canskip]CCPCONCache.en = 1
+;A8: ASM Source was:  BSF CCPCONCACHE,EN,ACCESS
+	BSF	CCPCONCACHE,7,ACCESS
+;legacy code, replaced by canskip
+;Finish preparing CCP*CON
+;SET CCPCONCache.CCP1M3 ON
+;SET CCPCONCache.CCP1M2 ON
+;SET CCPCONCache.CCP1M1 OFF
+;SET CCPCONCache.CCP1M0 OFF'
+;CCPCONCache.CCP1M3, CCPCONCache.CCP1M2, CCPCONCache.CCP1M1, CCPCONCache.CCP1M0 = b'1100'
+;A8: ASM Source was:  BSF CCPCONCACHE,CCP1MODE3,ACCESS
+	BSF	CCPCONCACHE,3,ACCESS
+;A8: ASM Source was:  BSF CCPCONCACHE,CCP1MODE2,ACCESS
+	BSF	CCPCONCACHE,2,ACCESS
+;A8: ASM Source was:  BCF CCPCONCACHE,CCP1MODE1,ACCESS
+	BCF	CCPCONCACHE,1,ACCESS
+;A8: ASM Source was:  BCF CCPCONCACHE,CCP1MODE0,ACCESS
+	BCF	CCPCONCACHE,0,ACCESS
+;Enable Timer 2
+;SET T2CON.TMR2ON ON
+;A8: ASM Source was:  BSF T2CON,TMR2ON,BANKED
+	BSF	T2CON,7,BANKED
+;This is the end of script section, now we use the constants created to updated registers.
+STARTOFFIXEDPWMMODECODE:
+;Set registers using the constants from script
+;This is repeated for timer 2, 4 and 6 - and the two timer variants and the 9 PWM channels
+;This uses the user defined constants to set the appropiate registers.
+SETPWMDUTYCODE:
+;This section finally, sets the Duty using the constants from the script.
+;This uses the user defined constants to set the appropiate registers.
+REV2018_ENDOFFIXEDPWMMODECODE:
+;This is the end of the fixed PWM Mode handler
+	BANKSEL	0
 	RETURN
 
 ;********************************************************************************
@@ -448,8 +885,8 @@ INITSYS:
 ;NDIV0 = 0
 ;A8: ASM Source was:  BCF OSCCON1,NDIV0,BANKED
 	BCF	OSCCON1,0,BANKED
-;OSCFRQ = 0b00000011    '8mhz
-	MOVLW	3
+;OSCFRQ = 0b00001000  '64mhz
+	MOVLW	8
 	MOVWF	OSCFRQ,BANKED
 ;asm showdebug _Complete_the_chip_setup_of_BSR,ADCs,ANSEL_and_other_key_setup_registers_or_register_bits
 ;Clear BSR on ChipFamily16 MCUs
@@ -494,20 +931,19 @@ BANKSEL	CM2CON0
 
 ;********************************************************************************
 
-;OVERLOADED SIGNATURE: BYTE:, SOURCE: A-D.H (2190)
-FN_READAD128:
-;Always RIGHT justified
-;Set up A/D format
-;SET ADFM ON
+;OVERLOADED SIGNATURE: BYTE:, SOURCE: A-D.H (1740)
+FN_READAD5:
+;ADFM should configured to ensure LEFT justified
+;SET ADFM OFF
 BANKSEL	ADCON0
-;A8: ASM Source was:  BSF ADCON0,ADFM0,BANKED
-	BSF	ADCON0,2,BANKED
-;Set A/D Result Mode to 12-Bit
-;Required by some chips
+;A8: ASM Source was:  BCF ADCON0,ADFM0,BANKED
+	BCF	ADCON0,2,BANKED
+;for 16F1885x and possibly future others
 ;ADPCH = ADReadPort
 	MOVFF	ADREADPORT,ADPCH
-;Do conversion
-;LLReadAD 0
+;***************************************
+;Perform conversion
+;LLReadAD 1
 ;Macro Source: a-d.h (371)
 ;***  'Special section for 16F1688x Chips ***
 ;'Configure ANSELA/B/C/D
@@ -533,14 +969,14 @@ SYSSELECTEND1:
 	MOVWF	ADCLK,BANKED
 ;Result formatting
 ;if ADLeftadjust = 0 then  '10-bit
-;Set ADCON0.2 ON
-;Set ADFM ON
-;A8: ASM Source was:  BSF ADCON0,ADFM0,BANKED
-	BSF	ADCON0,2,BANKED
-;Set ADFM0 ON
-;A8: ASM Source was:  BSF ADCON0,ADFM0,BANKED
-	BSF	ADCON0,2,BANKED
-;Else
+;Set ADCON.2 off     '8-bit
+;Set ADFM OFF
+;A8: ASM Source was:  BCF ADCON0,ADFM0,BANKED
+	BCF	ADCON0,2,BANKED
+;Set ADFM0 OFF
+;A8: ASM Source was:  BCF ADCON0,ADFM0,BANKED
+	BCF	ADCON0,2,BANKED
+;End if
 ;Select Channel
 ;ADPCH = ADReadPort  'Configure AD read Channel
 	MOVFF	ADREADPORT,ADPCH
@@ -577,15 +1013,8 @@ BANKSEL	ANSELA
 	CLRF	ANSELB,BANKED
 ;ANSELC = 0
 	CLRF	ANSELC,BANKED
-;Write output
-;ReadAD12 = ADRESL
-;A2: ASM Source was:  MOVFF ADRESL,READAD12
-;A4: ASM Source was:  MOVFF ADRESL,READAD12
-	MOVFF	ADRES,READAD12
-	CLRF	READAD12_H,ACCESS
-;ReadAD12_H = ADRESH
-	MOVFF	ADRESH,READAD12_H
-;Put A/D format back to normal
+;ReadAD = ADRESH
+	MOVFF	ADRESH,READAD
 ;SET ADFM OFF
 BANKSEL	ADCON0
 ;A8: ASM Source was:  BCF ADCON0,ADFM0,BANKED
@@ -596,7 +1025,7 @@ BANKSEL	ADCON0
 ;********************************************************************************
 
 ;OVERLOADED SIGNATURE: WORD:WORD:WORD:WORD:WORD:INTEGER:, SOURCE: STDBASIC.H (263)
-FN_SCALE72:
+FN_SCALE73:
 ;dim l_syscalc as word
 ;dim l_syscalcF as long
 ;l_syscalcf =  [long]( l_map - l_fromLow ) * [long](l_toHigh   - l_toLow)
@@ -803,7 +1232,7 @@ SYSDIVSUB32:
 	CLRF	SYSLONGTEMPB_E,ACCESS
 	RCALL	SYSCOMPEQUAL32
 	BTFSS	SYSBYTETEMPX,0,ACCESS
-	BRA	ENDIF5
+	BRA	ENDIF10
 ;SysLongTempA = 0
 	CLRF	SYSLONGTEMPA,ACCESS
 	CLRF	SYSLONGTEMPA_H,ACCESS
@@ -812,7 +1241,7 @@ SYSDIVSUB32:
 ;exit sub
 	RETURN
 ;end if
-ENDIF5:
+ENDIF10:
 ;Main calc routine
 ;SysDivLoop = 32
 	MOVLW	32
@@ -845,7 +1274,7 @@ SYSDIV32START:
 ;If C Off Then
 ;A8: ASM Source was:  BTFSC STATUS,C,ACCESS
 	BTFSC	STATUS,0,ACCESS
-	BRA	ENDIF6
+	BRA	ENDIF11
 ;Set SysLongDivMultA.0 Off
 	BCF	SYSLONGDIVMULTA,0,ACCESS
 ;SysLongDivMultX = SysLongDivMultX + SysLongDivMultB
@@ -858,7 +1287,7 @@ SYSDIV32START:
 	MOVF	SYSLONGDIVMULTB_E,W,ACCESS
 	ADDWFC	SYSLONGDIVMULTX_E,F,ACCESS
 ;End If
-ENDIF6:
+ENDIF11:
 ;decfsz SysDivLoop, F
 	DECFSZ	SYSDIVLOOP, F,ACCESS
 ;goto SysDiv32Start
@@ -905,7 +1334,7 @@ SYSMULTSUB32:
 MUL32LOOP:
 ;IF SysLongDivMultB.0 ON then SysLongDivMultX += SysLongDivMultA
 	BTFSS	SYSLONGDIVMULTB,0,ACCESS
-	BRA	ENDIF3
+	BRA	ENDIF8
 	MOVF	SYSLONGDIVMULTA,W,ACCESS
 	ADDWF	SYSLONGDIVMULTX,F,ACCESS
 	MOVF	SYSLONGDIVMULTA_H,W,ACCESS
@@ -914,7 +1343,7 @@ MUL32LOOP:
 	ADDWFC	SYSLONGDIVMULTX_U,F,ACCESS
 	MOVF	SYSLONGDIVMULTA_E,W,ACCESS
 	ADDWFC	SYSLONGDIVMULTX_E,F,ACCESS
-ENDIF3:
+ENDIF8:
 ;set STATUS.C OFF
 ;A8: ASM Source was:  BCF STATUS,C,ACCESS
 	BCF	STATUS,0,ACCESS
