@@ -248,7 +248,7 @@
 
 ;********************************************************************************
 
- PSECT   RESETVEC,delta=2, abs
+ PSECT   code,delta=2, abs, global, class=CODE,  space=SPACE_CODE
  GLOBAL RESETVEC
  RESETVEC:
 ;VECTORS
@@ -261,7 +261,7 @@
 ;********************************************************************************
 
 ;START OF PROGRAM MEMORY PAGE 0
-	ORG	5
+ORG	5
 GLOBAL	BASPROGRAMSTART
 BASPROGRAMSTART:
 ;CALL INITIALISATION ROUTINES
