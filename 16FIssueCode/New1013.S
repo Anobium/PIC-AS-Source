@@ -249,6 +249,7 @@
 ;********************************************************************************
 
  PSECT   RESETVEC,delta=2, abs
+ GLOBAL RESETVEC
  RESETVEC:
 ;VECTORS
 	ORG	0
