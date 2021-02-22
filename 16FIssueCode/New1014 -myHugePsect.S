@@ -1,23 +1,32 @@
-;
-;
-;
-; -msummary=+mem,-psect,-class,-hex,-file,-sha1,-sha256,-xml,-xmlfull -mcallgraph=std -mno-download-hex -Wl,-AALLPROG=0h-1FFFh
-; :0:: error: (1347) can't find 0x1800 words (0x1800 withtotal) for psect "myHugePsect" in class "ALLPROG" (largest unused contiguous range 0x2000)
+; -msummary=+mem,-psect,-class,-hex,-file,-sha1,-sha256,-xml,-xmlfull -mcallgraph=std -mno-download-hex -Wl,-AALLPROG=0h-1FFFh  -Wl,-DALLPROG=2
+
+
+
+;newpic_8.S:3008:: error: (1357) fixup overflow storing 0xFFFFF80A in 2 bytes at 0x200A/0x2 -> 0x1005 (build/default/production/newpic_8.o 231/0xA)
+;newpic_8.S:3047:: error: (1357) fixup overflow storing 0x818 in 2 bytes at 0x2032/0x2 -> 0x1019 (build/default/production/newpic_8.o 231/0x32)
+;newpic_8.S:3049:: error: (1357) fixup overflow storing 0x816 in 2 bytes at 0x2036/0x2 -> 0x101B (build/default/production/newpic_8.o 231/0x36)
+;newpic_8.S:3051:: error: (1357) fixup overflow storing 0x814 in 2 bytes at 0x203A/0x2 -> 0x101D (build/default/production/newpic_8.o 231/0x3A)
+
 
 ;Set up the assembler options (Chip type, clock source, other bits and pieces)
 ;PROCESSOR   16F18855
  PAGEWIDTH   132
  RADIX       DEC
- TITLE       "C:\temp\New1014-myHugePect.S"
- SUBTITLE    "02-19-2021"
+ TITLE       "D:\GCB@Syn40\GreatCowBasic\Demos\glcd_solutions\glcd_simple_demonstration_solutions\glcd_simple_demonstration_hardware_i2c_16f18855_for_ssd1306@32.S"
+ SUBTITLE    "02-22-2021"
 
 ; Reverse lookup file(s)
-; C:\Program Files\Microchip\xc8\v2.31\pic\include\proc\pic16f18855.inc
-; C:\Program Files\Microchip\xc8\v2.31\pic\dat\cfgmap\16f18855.cfgmap
+; C:\Program Files\Microchip\xc8\v2.32\pic\include\proc\pic16f18855.inc
+; C:\Program Files\Microchip\xc8\v2.32\pic\dat\cfgmap\16f18855.cfgmap
 
  #include <xc.inc>
 
-
+;********************************************************************************
+;Explicit PIC-AS constants to resolve the crazyness of the PIC-AS syntax
+;These are therefore the same as MPASM
+#define BANKED b
+#define ACCESS a
+#define UPPER low highword
 
 ;********************************************************************************
 ;Explicit CONFIG
@@ -36,215 +45,421 @@
 ;********************************************************************************
 
 ;Set aside RAM memory locations for variables. All variables are global.
+GLOBAL  BYTENUMBER
  BYTENUMBER                       EQU 32                    ; 0X20
+GLOBAL  CCOUNT
  CCOUNT                           EQU 33                    ; 0X21
+GLOBAL  CHARCODE
  CHARCODE                         EQU 34                    ; 0X22
+GLOBAL  CHARCOL
  CHARCOL                          EQU 35                    ; 0X23
+GLOBAL  CHARCOLS
  CHARCOLS                         EQU 37                    ; 0X25
+GLOBAL  CHARCOL_H
  CHARCOL_H                        EQU 36                    ; 0X24
+GLOBAL  CHARLOCX
  CHARLOCX                         EQU 38                    ; 0X26
+GLOBAL  CHARLOCX_H
  CHARLOCX_H                       EQU 39                    ; 0X27
+GLOBAL  CHARLOCY
  CHARLOCY                         EQU 40                    ; 0X28
+GLOBAL  CHARLOCY_H
  CHARLOCY_H                       EQU 41                    ; 0X29
+GLOBAL  CHARROW
  CHARROW                          EQU 42                    ; 0X2A
+GLOBAL  CHARROWS
  CHARROWS                         EQU 44                    ; 0X2C
+GLOBAL  CHARROW_H
  CHARROW_H                        EQU 43                    ; 0X2B
+GLOBAL  CHR
  CHR                              EQU 9030                    ; 0X2346
+GLOBAL  COL
  COL                              EQU 45                    ; 0X2D
+GLOBAL  CURRCHARCOL
  CURRCHARCOL                      EQU 46                    ; 0X2E
+GLOBAL  CURRCHARROW
  CURRCHARROW                      EQU 47                    ; 0X2F
+GLOBAL  CURRCHARVAL
  CURRCHARVAL                      EQU 48                    ; 0X30
+GLOBAL  DELAYTEMP
  DELAYTEMP                        EQU 112                    ; 0X70
+GLOBAL  DELAYTEMP2
  DELAYTEMP2                       EQU 113                    ; 0X71
+GLOBAL  DRAWLINE
  DRAWLINE                         EQU 49                    ; 0X31
+GLOBAL  DRAWLINE_H
  DRAWLINE_H                       EQU 50                    ; 0X32
+GLOBAL  GLCDBACKGROUND
  GLCDBACKGROUND                   EQU 51                    ; 0X33
+GLOBAL  GLCDBACKGROUND_H
  GLCDBACKGROUND_H                 EQU 52                    ; 0X34
+GLOBAL  GLCDBITNO
  GLCDBITNO                        EQU 53                    ; 0X35
+GLOBAL  GLCDCHANGE
  GLCDCHANGE                       EQU 54                    ; 0X36
+GLOBAL  GLCDCOLOUR
  GLCDCOLOUR                       EQU 55                    ; 0X37
+GLOBAL  GLCDCOLOUR_H
  GLCDCOLOUR_H                     EQU 56                    ; 0X38
+GLOBAL  GLCDDATATEMP
  GLCDDATATEMP                     EQU 57                    ; 0X39
+GLOBAL  GLCDFNTDEFAULT
  GLCDFNTDEFAULT                   EQU 58                    ; 0X3A
+GLOBAL  GLCDFNTDEFAULTHEIGHT
  GLCDFNTDEFAULTHEIGHT             EQU 59                    ; 0X3B
+GLOBAL  GLCDFNTDEFAULTSIZE
  GLCDFNTDEFAULTSIZE               EQU 60                    ; 0X3C
+GLOBAL  GLCDFONTWIDTH
  GLCDFONTWIDTH                    EQU 61                    ; 0X3D
+GLOBAL  GLCDFOREGROUND
  GLCDFOREGROUND                   EQU 62                    ; 0X3E
+GLOBAL  GLCDFOREGROUND_H
  GLCDFOREGROUND_H                 EQU 63                    ; 0X3F
+GLOBAL  GLCDPRINTLEN
  GLCDPRINTLEN                     EQU 64                    ; 0X40
+GLOBAL  GLCDPRINTLOC
  GLCDPRINTLOC                     EQU 65                    ; 0X41
+GLOBAL  GLCDPRINTLOC_H
  GLCDPRINTLOC_H                   EQU 66                    ; 0X42
+GLOBAL  GLCDPRINT_STRING_COUNTER
  GLCDPRINT_STRING_COUNTER         EQU 67                    ; 0X43
+GLOBAL  GLCDTEMP
  GLCDTEMP                         EQU 68                    ; 0X44
+GLOBAL  GLCDTEMP_H
  GLCDTEMP_H                       EQU 69                    ; 0X45
+GLOBAL  GLCDX
  GLCDX                            EQU 70                    ; 0X46
+GLOBAL  GLCDY
  GLCDY                            EQU 71                    ; 0X47
+GLOBAL  GLCDY_TEMP
  GLCDY_TEMP                       EQU 72                    ; 0X48
+GLOBAL  GLCD_YORDINATE
  GLCD_YORDINATE                   EQU 73                    ; 0X49
+GLOBAL  GLCD_YORDINATE_H
  GLCD_YORDINATE_H                 EQU 74                    ; 0X4A
+GLOBAL  HI2CACKPOLLSTATE
  HI2CACKPOLLSTATE                 EQU 75                    ; 0X4B
+GLOBAL  HI2CCURRENTMODE
  HI2CCURRENTMODE                  EQU 76                    ; 0X4C
+GLOBAL  HI2CWAITMSSPTIMEOUT
  HI2CWAITMSSPTIMEOUT              EQU 77                    ; 0X4D
+GLOBAL  I2CBYTE
  I2CBYTE                          EQU 78                    ; 0X4E
+GLOBAL  INXRADIUS
  INXRADIUS                        EQU 79                    ; 0X4F
+GLOBAL  INXRADIUS_H
  INXRADIUS_H                      EQU 80                    ; 0X50
+GLOBAL  LCDVALUE
  LCDVALUE                         EQU 81                    ; 0X51
+GLOBAL  LCDVALUE_E
  LCDVALUE_E                       EQU 84                    ; 0X54
+GLOBAL  LCDVALUE_H
  LCDVALUE_H                       EQU 82                    ; 0X52
+GLOBAL  LCDVALUE_U
  LCDVALUE_U                       EQU 83                    ; 0X53
+GLOBAL  LINECOLOUR
  LINECOLOUR                       EQU 85                    ; 0X55
+GLOBAL  LINECOLOUR_H
  LINECOLOUR_H                     EQU 86                    ; 0X56
+GLOBAL  LINEDIFFX
  LINEDIFFX                        EQU 87                    ; 0X57
+GLOBAL  LINEDIFFX_H
  LINEDIFFX_H                      EQU 88                    ; 0X58
+GLOBAL  LINEDIFFX_X2
  LINEDIFFX_X2                     EQU 89                    ; 0X59
+GLOBAL  LINEDIFFX_X2_H
  LINEDIFFX_X2_H                   EQU 90                    ; 0X5A
+GLOBAL  LINEDIFFY
  LINEDIFFY                        EQU 91                    ; 0X5B
+GLOBAL  LINEDIFFY_H
  LINEDIFFY_H                      EQU 92                    ; 0X5C
+GLOBAL  LINEDIFFY_X2
  LINEDIFFY_X2                     EQU 93                    ; 0X5D
+GLOBAL  LINEDIFFY_X2_H
  LINEDIFFY_X2_H                   EQU 94                    ; 0X5E
+GLOBAL  LINEERR
  LINEERR                          EQU 95                    ; 0X5F
+GLOBAL  LINEERR_H
  LINEERR_H                        EQU 96                    ; 0X60
+GLOBAL  LINESTEPX
  LINESTEPX                        EQU 97                    ; 0X61
+GLOBAL  LINESTEPX_H
  LINESTEPX_H                      EQU 98                    ; 0X62
+GLOBAL  LINESTEPY
  LINESTEPY                        EQU 99                    ; 0X63
+GLOBAL  LINESTEPY_H
  LINESTEPY_H                      EQU 100                    ; 0X64
+GLOBAL  LINEX1
  LINEX1                           EQU 101                    ; 0X65
+GLOBAL  LINEX1_H
  LINEX1_H                         EQU 102                    ; 0X66
+GLOBAL  LINEX2
  LINEX2                           EQU 103                    ; 0X67
+GLOBAL  LINEX2_H
  LINEX2_H                         EQU 104                    ; 0X68
+GLOBAL  LINEY1
  LINEY1                           EQU 105                    ; 0X69
+GLOBAL  LINEY1_H
  LINEY1_H                         EQU 106                    ; 0X6A
+GLOBAL  LINEY2
  LINEY2                           EQU 107                    ; 0X6B
+GLOBAL  LINEY2_H
  LINEY2_H                         EQU 108                    ; 0X6C
+GLOBAL  LOCX
  LOCX                             EQU 109                    ; 0X6D
+GLOBAL  LOCY
  LOCY                             EQU 110                    ; 0X6E
+GLOBAL  LONGNUMBER
  LONGNUMBER                       EQU 160                    ; 0XA0
+GLOBAL  LONGNUMBER_E
  LONGNUMBER_E                     EQU 163                    ; 0XA3
+GLOBAL  LONGNUMBER_H
  LONGNUMBER_H                     EQU 161                    ; 0XA1
+GLOBAL  LONGNUMBER_U
  LONGNUMBER_U                     EQU 162                    ; 0XA2
+GLOBAL  OUTSTRING
  OUTSTRING                        EQU 8989                    ; 0X231D
+GLOBAL  PAD
  PAD                              EQU 8948                    ; 0X22F4
+GLOBAL  POSCHARX
  POSCHARX                         EQU 164                    ; 0XA4
+GLOBAL  POSCHARX_H
  POSCHARX_H                       EQU 165                    ; 0XA5
+GLOBAL  POSCHARY
  POSCHARY                         EQU 111                    ; 0X6F
+GLOBAL  PRINTLOCX
  PRINTLOCX                        EQU 166                    ; 0XA6
+GLOBAL  PRINTLOCX_H
  PRINTLOCX_H                      EQU 167                    ; 0XA7
+GLOBAL  PRINTLOCY
  PRINTLOCY                        EQU 168                    ; 0XA8
+GLOBAL  PRINTLOCY_H
  PRINTLOCY_H                      EQU 169                    ; 0XA9
+GLOBAL  RADIUSERR
  RADIUSERR                        EQU 170                    ; 0XAA
+GLOBAL  RADIUSERR_H
  RADIUSERR_H                      EQU 171                    ; 0XAB
+GLOBAL  ROW
  ROW                              EQU 172                    ; 0XAC
+GLOBAL  SSD1306SENDBYTE
  SSD1306SENDBYTE                  EQU 173                    ; 0XAD
+GLOBAL  SSD1306_BUFFERALIAS
  SSD1306_BUFFERALIAS              EQU 9071                    ; 0X236F
+GLOBAL  SSD1306_BUFFERLOCATIONCALC
  SSD1306_BUFFERLOCATIONCALC       EQU 174                    ; 0XAE
+GLOBAL  SSD1306_BUFFERLOCATIONCALC_H
  SSD1306_BUFFERLOCATIONCALC_H     EQU 175                    ; 0XAF
+GLOBAL  STRINGLOCX
  STRINGLOCX                       EQU 176                    ; 0XB0
+GLOBAL  STRINGPOINTER
  STRINGPOINTER                    EQU 177                    ; 0XB1
+GLOBAL  SYSARRAYTEMP1
  SYSARRAYTEMP1                    EQU 178                    ; 0XB2
+GLOBAL  SYSARRAYTEMP2
  SYSARRAYTEMP2                    EQU 179                    ; 0XB3
+GLOBAL  SYSBITVAR0
  SYSBITVAR0                       EQU 180                    ; 0XB4
+GLOBAL  SYSBYTETEMPA
  SYSBYTETEMPA                     EQU 117                    ; 0X75
+GLOBAL  SYSBYTETEMPB
  SYSBYTETEMPB                     EQU 121                    ; 0X79
+GLOBAL  SYSBYTETEMPX
  SYSBYTETEMPX                     EQU 112                    ; 0X70
+GLOBAL  SYSCALCTEMPA
  SYSCALCTEMPA                     EQU 117                    ; 0X75
+GLOBAL  SYSCALCTEMPA_E
  SYSCALCTEMPA_E                   EQU 120                    ; 0X78
+GLOBAL  SYSCALCTEMPA_H
  SYSCALCTEMPA_H                   EQU 118                    ; 0X76
+GLOBAL  SYSCALCTEMPA_U
  SYSCALCTEMPA_U                   EQU 119                    ; 0X77
+GLOBAL  SYSCHAR
  SYSCHAR                          EQU 181                    ; 0XB5
+GLOBAL  SYSCHARCOUNT
  SYSCHARCOUNT                     EQU 182                    ; 0XB6
+GLOBAL  SYSCHARSHANDLER
  SYSCHARSHANDLER                  EQU 183                    ; 0XB7
+GLOBAL  SYSCHARSHANDLER_H
  SYSCHARSHANDLER_H                EQU 184                    ; 0XB8
+GLOBAL  SYSDIVLOOP
  SYSDIVLOOP                       EQU 116                    ; 0X74
+GLOBAL  SYSDIVMULTA
  SYSDIVMULTA                      EQU 119                    ; 0X77
+GLOBAL  SYSDIVMULTA_H
  SYSDIVMULTA_H                    EQU 120                    ; 0X78
+GLOBAL  SYSDIVMULTB
  SYSDIVMULTB                      EQU 123                    ; 0X7B
+GLOBAL  SYSDIVMULTB_H
  SYSDIVMULTB_H                    EQU 124                    ; 0X7C
+GLOBAL  SYSDIVMULTX
  SYSDIVMULTX                      EQU 114                    ; 0X72
+GLOBAL  SYSDIVMULTX_H
  SYSDIVMULTX_H                    EQU 115                    ; 0X73
+GLOBAL  SYSINTEGERTEMPA
  SYSINTEGERTEMPA                  EQU 117                    ; 0X75
+GLOBAL  SYSINTEGERTEMPA_H
  SYSINTEGERTEMPA_H                EQU 118                    ; 0X76
+GLOBAL  SYSINTEGERTEMPB
  SYSINTEGERTEMPB                  EQU 121                    ; 0X79
+GLOBAL  SYSINTEGERTEMPB_H
  SYSINTEGERTEMPB_H                EQU 122                    ; 0X7A
+GLOBAL  SYSINTEGERTEMPX
  SYSINTEGERTEMPX                  EQU 112                    ; 0X70
+GLOBAL  SYSINTEGERTEMPX_H
  SYSINTEGERTEMPX_H                EQU 113                    ; 0X71
+GLOBAL  SYSLCDPRINTDATAHANDLER
  SYSLCDPRINTDATAHANDLER           EQU 185                    ; 0XB9
+GLOBAL  SYSLCDPRINTDATAHANDLER_H
  SYSLCDPRINTDATAHANDLER_H         EQU 186                    ; 0XBA
+GLOBAL  SYSLONGDIVMULTA
  SYSLONGDIVMULTA                  EQU 187                    ; 0XBB
+GLOBAL  SYSLONGDIVMULTA_E
  SYSLONGDIVMULTA_E                EQU 190                    ; 0XBE
+GLOBAL  SYSLONGDIVMULTA_H
  SYSLONGDIVMULTA_H                EQU 188                    ; 0XBC
+GLOBAL  SYSLONGDIVMULTA_U
  SYSLONGDIVMULTA_U                EQU 189                    ; 0XBD
+GLOBAL  SYSLONGDIVMULTB
  SYSLONGDIVMULTB                  EQU 191                    ; 0XBF
+GLOBAL  SYSLONGDIVMULTB_E
  SYSLONGDIVMULTB_E                EQU 194                    ; 0XC2
+GLOBAL  SYSLONGDIVMULTB_H
  SYSLONGDIVMULTB_H                EQU 192                    ; 0XC0
+GLOBAL  SYSLONGDIVMULTB_U
  SYSLONGDIVMULTB_U                EQU 193                    ; 0XC1
+GLOBAL  SYSLONGDIVMULTX
  SYSLONGDIVMULTX                  EQU 195                    ; 0XC3
+GLOBAL  SYSLONGDIVMULTX_E
  SYSLONGDIVMULTX_E                EQU 198                    ; 0XC6
+GLOBAL  SYSLONGDIVMULTX_H
  SYSLONGDIVMULTX_H                EQU 196                    ; 0XC4
+GLOBAL  SYSLONGDIVMULTX_U
  SYSLONGDIVMULTX_U                EQU 197                    ; 0XC5
+GLOBAL  SYSLONGTEMPA
  SYSLONGTEMPA                     EQU 117                    ; 0X75
+GLOBAL  SYSLONGTEMPA_E
  SYSLONGTEMPA_E                   EQU 120                    ; 0X78
+GLOBAL  SYSLONGTEMPA_H
  SYSLONGTEMPA_H                   EQU 118                    ; 0X76
+GLOBAL  SYSLONGTEMPA_U
  SYSLONGTEMPA_U                   EQU 119                    ; 0X77
+GLOBAL  SYSLONGTEMPB
  SYSLONGTEMPB                     EQU 121                    ; 0X79
+GLOBAL  SYSLONGTEMPB_E
  SYSLONGTEMPB_E                   EQU 124                    ; 0X7C
+GLOBAL  SYSLONGTEMPB_H
  SYSLONGTEMPB_H                   EQU 122                    ; 0X7A
+GLOBAL  SYSLONGTEMPB_U
  SYSLONGTEMPB_U                   EQU 123                    ; 0X7B
+GLOBAL  SYSLONGTEMPX
  SYSLONGTEMPX                     EQU 112                    ; 0X70
+GLOBAL  SYSLONGTEMPX_E
  SYSLONGTEMPX_E                   EQU 115                    ; 0X73
+GLOBAL  SYSLONGTEMPX_H
  SYSLONGTEMPX_H                   EQU 113                    ; 0X71
+GLOBAL  SYSLONGTEMPX_U
  SYSLONGTEMPX_U                   EQU 114                    ; 0X72
+GLOBAL  SYSPRINTBUFFER
  SYSPRINTBUFFER                   EQU 8937                    ; 0X22E9
+GLOBAL  SYSPRINTBUFFLEN
  SYSPRINTBUFFLEN                  EQU 199                    ; 0XC7
+GLOBAL  SYSREPEATTEMP1
  SYSREPEATTEMP1                   EQU 200                    ; 0XC8
+GLOBAL  SYSREPEATTEMP2
  SYSREPEATTEMP2                   EQU 201                    ; 0XC9
+GLOBAL  SYSREPEATTEMP4
  SYSREPEATTEMP4                   EQU 202                    ; 0XCA
+GLOBAL  SYSSIGNBYTE
  SYSSIGNBYTE                      EQU 125                    ; 0X7D
+GLOBAL  SYSSTRINGA
  SYSSTRINGA                       EQU 119                    ; 0X77
+GLOBAL  SYSSTRINGA_H
  SYSSTRINGA_H                     EQU 120                    ; 0X78
+GLOBAL  SYSSTRINGLENGTH
  SYSSTRINGLENGTH                  EQU 118                    ; 0X76
+GLOBAL  SYSSTRINGPARAM1
  SYSSTRINGPARAM1                  EQU 288                    ; 0X120
+GLOBAL  SYSSTRINGTEMP
  SYSSTRINGTEMP                    EQU 203                    ; 0XCB
+GLOBAL  SYSSTRLEN
  SYSSTRLEN                        EQU 204                    ; 0XCC
+GLOBAL  SYSSYSINSTRING3HANDLER
  SYSSYSINSTRING3HANDLER           EQU 205                    ; 0XCD
+GLOBAL  SYSSYSINSTRING3HANDLER_H
  SYSSYSINSTRING3HANDLER_H         EQU 206                    ; 0XCE
+GLOBAL  SYSSYSINSTRINGHANDLER
  SYSSYSINSTRINGHANDLER            EQU 207                    ; 0XCF
+GLOBAL  SYSSYSINSTRINGHANDLER_H
  SYSSYSINSTRINGHANDLER_H          EQU 208                    ; 0XD0
+GLOBAL  SYSTEMP1
  SYSTEMP1                         EQU 209                    ; 0XD1
+GLOBAL  SYSTEMP1_E
  SYSTEMP1_E                       EQU 212                    ; 0XD4
+GLOBAL  SYSTEMP1_H
  SYSTEMP1_H                       EQU 210                    ; 0XD2
+GLOBAL  SYSTEMP1_U
  SYSTEMP1_U                       EQU 211                    ; 0XD3
+GLOBAL  SYSTEMP2
  SYSTEMP2                         EQU 213                    ; 0XD5
+GLOBAL  SYSTEMP2_H
  SYSTEMP2_H                       EQU 214                    ; 0XD6
+GLOBAL  SYSTEMP3
  SYSTEMP3                         EQU 215                    ; 0XD7
+GLOBAL  SYSTEMP3_H
  SYSTEMP3_H                       EQU 216                    ; 0XD8
+GLOBAL  SYSWAITTEMPMS
  SYSWAITTEMPMS                    EQU 114                    ; 0X72
+GLOBAL  SYSWAITTEMPMS_H
  SYSWAITTEMPMS_H                  EQU 115                    ; 0X73
+GLOBAL  SYSWAITTEMPS
  SYSWAITTEMPS                     EQU 116                    ; 0X74
+GLOBAL  SYSWORDTEMPA
  SYSWORDTEMPA                     EQU 117                    ; 0X75
+GLOBAL  SYSWORDTEMPA_H
  SYSWORDTEMPA_H                   EQU 118                    ; 0X76
+GLOBAL  SYSWORDTEMPB
  SYSWORDTEMPB                     EQU 121                    ; 0X79
+GLOBAL  SYSWORDTEMPB_H
  SYSWORDTEMPB_H                   EQU 122                    ; 0X7A
+GLOBAL  SYSWORDTEMPX
  SYSWORDTEMPX                     EQU 112                    ; 0X70
+GLOBAL  SYSWORDTEMPX_H
  SYSWORDTEMPX_H                   EQU 113                    ; 0X71
+GLOBAL  WORDNUMBER
  WORDNUMBER                       EQU 217                    ; 0XD9
+GLOBAL  WORDNUMBER_H
  WORDNUMBER_H                     EQU 218                    ; 0XDA
+GLOBAL  XCHAR
  XCHAR                            EQU 219                    ; 0XDB
+GLOBAL  XOFFSET
  XOFFSET                          EQU 220                    ; 0XDC
+GLOBAL  XOFFSET_H
  XOFFSET_H                        EQU 221                    ; 0XDD
+GLOBAL  XRADIUS
  XRADIUS                          EQU 222                    ; 0XDE
+GLOBAL  XRADIUS_H
  XRADIUS_H                        EQU 223                    ; 0XDF
+GLOBAL  YOFFSET
  YOFFSET                          EQU 224                    ; 0XE0
+GLOBAL  YOFFSET_H
  YOFFSET_H                        EQU 225                    ; 0XE1
+GLOBAL  YORDINATE
  YORDINATE                        EQU 226                    ; 0XE2
+GLOBAL  _GLCDPAGE
  _GLCDPAGE                        EQU 227                    ; 0XE3
 
 ;********************************************************************************
 
 ;ALIAS VARIABLES
+GLOBAL  AFSR0
  AFSR0                            EQU 4
+GLOBAL  AFSR0_H
  AFSR0_H                          EQU 5
+GLOBAL  SYSCHR_0
  SYSCHR_0                         EQU 1350
+GLOBAL  SYSCHR_1
  SYSCHR_1                         EQU 1351
+GLOBAL  SYSPAD_0
  SYSPAD_0                         EQU 1220
 
 ;********************************************************************************
@@ -253,8 +468,7 @@
  RESETVEC:
 ;VECTORS
   ORG 0
-  PAGESEL BASPROGRAMSTART
-  GOTO  BASPROGRAMSTART
+  LJMP  BASPROGRAMSTART
   ORG 4
   RETFIE
 
@@ -307,9 +521,7 @@ BASPROGRAMSTART:
 ;hi2cMode Master
   MOVLW 12
   MOVWF HI2CCURRENTMODE
-  PAGESEL HI2CMODE
-  CALL  HI2CMODE
-  PAGESEL $
+  FCALL HI2CMODE
 ;*****************************************************************************************************
 ;Main program commences here.. everything before this is setup for the board.
 ;#DEFINE GLCD_TYPE GLCD_TYPE_SSD1306
@@ -352,7 +564,7 @@ BASPROGRAMSTART:
 GLOBAL  SYSFORLOOP1
 SYSFORLOOP1:
   INCF  _GLCDPAGE,F
-;GLCDPrint 0, 0,   "Great Cow BASIC"
+;GLCDPrint 0, 0,   "Great Cow BASIC "
   CLRF  PRINTLOCX
   CLRF  PRINTLOCX_H
   CLRF  PRINTLOCY
@@ -362,9 +574,7 @@ SYSFORLOOP1:
   MOVLW (HIGH STRINGTABLE1) | 128
   MOVWF SYSLCDPRINTDATAHANDLER_H
 BANKSEL STATUS
-  PAGESEL GLCDPRINT32
-  CALL  GLCDPRINT32
-  PAGESEL $
+  FCALL GLCDPRINT32
 ;GLCDPrint (0, 16, "Anobium 2021")
   BANKSEL PRINTLOCX
   CLRF  PRINTLOCX
@@ -377,9 +587,7 @@ BANKSEL STATUS
   MOVLW (HIGH STRINGTABLE2) | 128
   MOVWF SYSLCDPRINTDATAHANDLER_H
 BANKSEL STATUS
-  PAGESEL GLCDPRINT32
-  CALL  GLCDPRINT32
-  PAGESEL $
+  FCALL GLCDPRINT32
 ;GLCDPrint (76, 16, GLCD_WIDTH )
   MOVLW 76
   BANKSEL PRINTLOCX
@@ -394,9 +602,7 @@ BANKSEL STATUS
   CLRF  LCDVALUE_H
   CLRF  LCDVALUE_U
   CLRF  LCDVALUE_E
-  PAGESEL GLCDPRINT35
-  CALL  GLCDPRINT35
-  PAGESEL $
+  FCALL GLCDPRINT35
 ;GLCDPrint (96, 16, "*" )
   MOVLW 96
   BANKSEL PRINTLOCX
@@ -410,9 +616,7 @@ BANKSEL STATUS
   MOVLW (HIGH STRINGTABLE3) | 128
   MOVWF SYSLCDPRINTDATAHANDLER_H
 BANKSEL STATUS
-  PAGESEL GLCDPRINT32
-  CALL  GLCDPRINT32
-  PAGESEL $
+  FCALL GLCDPRINT32
 ;GLCDPrint (104, 16, GLCD_HEIGHT )
   MOVLW 104
   BANKSEL PRINTLOCX
@@ -427,9 +631,20 @@ BANKSEL STATUS
   CLRF  LCDVALUE_H
   CLRF  LCDVALUE_U
   CLRF  LCDVALUE_E
-  PAGESEL GLCDPRINT35
-  CALL  GLCDPRINT35
-  PAGESEL $
+  FCALL GLCDPRINT35
+;GLCDPrint 0, 32, "IT WORKS"
+  BANKSEL PRINTLOCX
+  CLRF  PRINTLOCX
+  CLRF  PRINTLOCX_H
+  MOVLW 32
+  MOVWF PRINTLOCY
+  CLRF  PRINTLOCY_H
+  MOVLW LOW STRINGTABLE4
+  MOVWF SYSLCDPRINTDATAHANDLER
+  MOVLW (HIGH STRINGTABLE4) | 128
+  MOVWF SYSLCDPRINTDATAHANDLER_H
+BANKSEL STATUS
+  FCALL GLCDPRINT32
 ;GLCD_Close_PageTransaction
 ;Macro Source: glcd_ssd1306.h (1184)
 ;Set cursor position
@@ -441,12 +656,9 @@ BANKSEL STATUS
   MOVLW 8
   MOVWF SYSBYTETEMPB
 BANKSEL STATUS
-  PAGESEL SYSMULTSUB
-  CALL  SYSMULTSUB
-  PAGESEL $
+  FCALL SYSMULTSUB
   MOVF  SYSBYTETEMPX,W
   MOVWF LOCY
-  PAGESEL CURSOR_POSITION_SSD1306
   CALL  CURSOR_POSITION_SSD1306
   PAGESEL $
 ;Send the buffer to the device using transaction
@@ -454,21 +666,15 @@ BANKSEL STATUS
 ;Macro Source: glcd_ssd1306.h (1210)
 ;4wire not supported, see Write_Transaction_Data_SSD1306
 ;HI2CStart
-  PAGESEL HI2CSTART
-  CALL  HI2CSTART
-  PAGESEL $
+  FCALL HI2CSTART
 ;HI2CSend GLCD_I2C_Address
   MOVLW 120
   MOVWF I2CBYTE
-  PAGESEL HI2CSEND
-  CALL  HI2CSEND
-  PAGESEL $
+  FCALL HI2CSEND
 ;HI2CSend 0x40
   MOVLW 64
   MOVWF I2CBYTE
-  PAGESEL HI2CSEND
-  CALL  HI2CSEND
-  PAGESEL $
+  FCALL HI2CSEND
 ;for SSD1306_BufferLocationCalc = 1 to 128
   BANKSEL SSD1306_BUFFERLOCATIONCALC
   CLRF  SSD1306_BUFFERLOCATIONCALC
@@ -494,9 +700,7 @@ MOVWF FSR0H
   MOVF  INDF0,W
   BANKSEL I2CBYTE
   MOVWF I2CBYTE
-  PAGESEL HI2CSEND
-  CALL  HI2CSEND
-  PAGESEL $
+  FCALL HI2CSEND
 ;Clear the buffer byte. We need it to be empty for the next page operation
 ;SSD1306_BufferAlias(SSD1306_BufferLocationCalc) = 0
   MOVLW LOW(SSD1306_BUFFERALIAS)
@@ -518,9 +722,7 @@ CLRF  INDF0
   MOVWF SYSWORDTEMPB
   CLRF  SYSWORDTEMPB_H
 BANKSEL STATUS
-  PAGESEL SYSCOMPLESSTHAN16
-  CALL  SYSCOMPLESSTHAN16
-  PAGESEL $
+  FCALL SYSCOMPLESSTHAN16
   BTFSC SYSBYTETEMPX,0
   GOTO  SYSFORLOOP2
 GLOBAL  SYSFORLOOPEND2
@@ -529,9 +731,7 @@ SYSFORLOOPEND2:
 ;Macro Source: glcd_ssd1306.h (1274)
 ;4wire not supported, see Write_Transaction_Data_SSD1306
 ;HI2CStop
-  PAGESEL HI2CSTOP
-  CALL  HI2CSTOP
-  PAGESEL $
+  FCALL HI2CSTOP
 ;next
   MOVLW 7
   BANKSEL _GLCDPAGE
@@ -545,12 +745,9 @@ SYSFORLOOPEND1:
   MOVLW 3
   MOVWF SYSWAITTEMPS
 BANKSEL STATUS
-  PAGESEL DELAY_S
-  CALL  DELAY_S
+  FCALL DELAY_S
 ;GLCDCLS
-  PAGESEL GLCDCLS_SSD1306
-  CALL  GLCDCLS_SSD1306
-  PAGESEL $
+  FCALL GLCDCLS_SSD1306
 ;GLCD_Open_PageTransaction 0, 7
 ;Macro Source: glcd_ssd1306.h (1172)
 ;dim _GLCDPage as byte
@@ -567,14 +764,12 @@ SYSFORLOOP3:
   CLRF  PRINTLOCX_H
   CLRF  PRINTLOCY
   CLRF  PRINTLOCY_H
-  MOVLW LOW STRINGTABLE4
+  MOVLW LOW STRINGTABLE5
   MOVWF SYSLCDPRINTDATAHANDLER
-  MOVLW (HIGH STRINGTABLE4) | 128
+  MOVLW (HIGH STRINGTABLE5) | 128
   MOVWF SYSLCDPRINTDATAHANDLER_H
 BANKSEL STATUS
-  PAGESEL GLCDPRINT32
-  CALL  GLCDPRINT32
-  PAGESEL $
+  FCALL GLCDPRINT32
 ;GLCDPrint (0, 16, "LM GLCD MODE")
   BANKSEL PRINTLOCX
   CLRF  PRINTLOCX
@@ -582,14 +777,12 @@ BANKSEL STATUS
   MOVLW 16
   MOVWF PRINTLOCY
   CLRF  PRINTLOCY_H
-  MOVLW LOW STRINGTABLE5
+  MOVLW LOW STRINGTABLE6
   MOVWF SYSLCDPRINTDATAHANDLER
-  MOVLW (HIGH STRINGTABLE5) | 128
+  MOVLW (HIGH STRINGTABLE6) | 128
   MOVWF SYSLCDPRINTDATAHANDLER_H
 BANKSEL STATUS
-  PAGESEL GLCDPRINT32
-  CALL  GLCDPRINT32
-  PAGESEL $
+  FCALL GLCDPRINT32
 ;GLCDPrint (0, 32, "GLCD_Buffer=128 bytes" )
   BANKSEL PRINTLOCX
   CLRF  PRINTLOCX
@@ -597,14 +790,12 @@ BANKSEL STATUS
   MOVLW 32
   MOVWF PRINTLOCY
   CLRF  PRINTLOCY_H
-  MOVLW LOW STRINGTABLE6
+  MOVLW LOW STRINGTABLE7
   MOVWF SYSLCDPRINTDATAHANDLER
-  MOVLW (HIGH STRINGTABLE6) | 128
+  MOVLW (HIGH STRINGTABLE7) | 128
   MOVWF SYSLCDPRINTDATAHANDLER_H
 BANKSEL STATUS
-  PAGESEL GLCDPRINT32
-  CALL  GLCDPRINT32
-  PAGESEL $
+  FCALL GLCDPRINT32
 ;GLCD_Close_PageTransaction
 ;Macro Source: glcd_ssd1306.h (1184)
 ;Set cursor position
@@ -616,12 +807,9 @@ BANKSEL STATUS
   MOVLW 8
   MOVWF SYSBYTETEMPB
 BANKSEL STATUS
-  PAGESEL SYSMULTSUB
-  CALL  SYSMULTSUB
-  PAGESEL $
+  FCALL SYSMULTSUB
   MOVF  SYSBYTETEMPX,W
   MOVWF LOCY
-  PAGESEL CURSOR_POSITION_SSD1306
   CALL  CURSOR_POSITION_SSD1306
   PAGESEL $
 ;Send the buffer to the device using transaction
@@ -629,21 +817,15 @@ BANKSEL STATUS
 ;Macro Source: glcd_ssd1306.h (1210)
 ;4wire not supported, see Write_Transaction_Data_SSD1306
 ;HI2CStart
-  PAGESEL HI2CSTART
-  CALL  HI2CSTART
-  PAGESEL $
+  FCALL HI2CSTART
 ;HI2CSend GLCD_I2C_Address
   MOVLW 120
   MOVWF I2CBYTE
-  PAGESEL HI2CSEND
-  CALL  HI2CSEND
-  PAGESEL $
+  FCALL HI2CSEND
 ;HI2CSend 0x40
   MOVLW 64
   MOVWF I2CBYTE
-  PAGESEL HI2CSEND
-  CALL  HI2CSEND
-  PAGESEL $
+  FCALL HI2CSEND
 ;for SSD1306_BufferLocationCalc = 1 to 128
   BANKSEL SSD1306_BUFFERLOCATIONCALC
   CLRF  SSD1306_BUFFERLOCATIONCALC
@@ -669,9 +851,7 @@ MOVWF FSR0H
   MOVF  INDF0,W
   BANKSEL I2CBYTE
   MOVWF I2CBYTE
-  PAGESEL HI2CSEND
-  CALL  HI2CSEND
-  PAGESEL $
+  FCALL HI2CSEND
 ;Clear the buffer byte. We need it to be empty for the next page operation
 ;SSD1306_BufferAlias(SSD1306_BufferLocationCalc) = 0
   MOVLW LOW(SSD1306_BUFFERALIAS)
@@ -693,9 +873,7 @@ CLRF  INDF0
   MOVWF SYSWORDTEMPB
   CLRF  SYSWORDTEMPB_H
 BANKSEL STATUS
-  PAGESEL SYSCOMPLESSTHAN16
-  CALL  SYSCOMPLESSTHAN16
-  PAGESEL $
+  FCALL SYSCOMPLESSTHAN16
   BTFSC SYSBYTETEMPX,0
   GOTO  SYSFORLOOP4
 GLOBAL  SYSFORLOOPEND4
@@ -704,9 +882,7 @@ SYSFORLOOPEND4:
 ;Macro Source: glcd_ssd1306.h (1274)
 ;4wire not supported, see Write_Transaction_Data_SSD1306
 ;HI2CStop
-  PAGESEL HI2CSTOP
-  CALL  HI2CSTOP
-  PAGESEL $
+  FCALL HI2CSTOP
 ;next
   MOVLW 7
   BANKSEL _GLCDPAGE
@@ -720,12 +896,9 @@ SYSFORLOOPEND3:
   MOVLW 3
   MOVWF SYSWAITTEMPS
 BANKSEL STATUS
-  PAGESEL DELAY_S
-  CALL  DELAY_S
+  FCALL DELAY_S
 ;GLCDCLS
-  PAGESEL GLCDCLS_SSD1306
-  CALL  GLCDCLS_SSD1306
-  PAGESEL $
+  FCALL GLCDCLS_SSD1306
 ;GLCDLoop
   CALL  GLCDLOOP
 ;End
@@ -757,9 +930,7 @@ BOX:
   MOVWF SYSWORDTEMPA
   MOVF  LINEX2_H,W
   MOVWF SYSWORDTEMPA_H
-  PAGESEL SYSCOMPLESSTHAN16
-  CALL  SYSCOMPLESSTHAN16
-  PAGESEL $
+  FCALL SYSCOMPLESSTHAN16
   BTFSS SYSBYTETEMPX,0
   GOTO  ENDIF30
 ;GLCDTemp = LineX1
@@ -789,9 +960,7 @@ ENDIF30:
   MOVWF SYSWORDTEMPA
   MOVF  LINEY2_H,W
   MOVWF SYSWORDTEMPA_H
-  PAGESEL SYSCOMPLESSTHAN16
-  CALL  SYSCOMPLESSTHAN16
-  PAGESEL $
+  FCALL SYSCOMPLESSTHAN16
   BTFSS SYSBYTETEMPX,0
   GOTO  ENDIF31
 ;GLCDTemp = LineY1
@@ -829,9 +998,7 @@ ENDIF31:
   MOVWF SYSWORDTEMPA
   MOVF  LINEX2_H,W
   MOVWF SYSWORDTEMPA_H
-  PAGESEL SYSCOMPLESSTHAN16
-  CALL  SYSCOMPLESSTHAN16
-  PAGESEL $
+  FCALL SYSCOMPLESSTHAN16
   BTFSC SYSBYTETEMPX,0
   GOTO  SYSFORLOOPEND11
 GLOBAL  SYSFORLOOP11
@@ -849,9 +1016,7 @@ SYSFORLOOP11:
   MOVWF GLCDCOLOUR
   MOVF  LINECOLOUR_H,W
   MOVWF GLCDCOLOUR_H
-  PAGESEL PSET_SSD1306
-  CALL  PSET_SSD1306
-  PAGESEL $
+  FCALL PSET_SSD1306
 ;PSet DrawLine, LineY2, LineColour
   MOVF  DRAWLINE,W
   MOVWF GLCDX
@@ -861,9 +1026,7 @@ SYSFORLOOP11:
   MOVWF GLCDCOLOUR
   MOVF  LINECOLOUR_H,W
   MOVWF GLCDCOLOUR_H
-  PAGESEL PSET_SSD1306
-  CALL  PSET_SSD1306
-  PAGESEL $
+  FCALL PSET_SSD1306
 ;Next
   MOVF  DRAWLINE,W
   MOVWF SYSWORDTEMPA
@@ -873,9 +1036,7 @@ SYSFORLOOP11:
   MOVWF SYSWORDTEMPB
   MOVF  LINEX2_H,W
   MOVWF SYSWORDTEMPB_H
-  PAGESEL SYSCOMPLESSTHAN16
-  CALL  SYSCOMPLESSTHAN16
-  PAGESEL $
+  FCALL SYSCOMPLESSTHAN16
   BTFSC SYSBYTETEMPX,0
   GOTO  SYSFORLOOP11
 GLOBAL  SYSFORLOOPEND11
@@ -896,9 +1057,7 @@ SYSFORLOOPEND11:
   MOVWF SYSWORDTEMPA
   MOVF  LINEY2_H,W
   MOVWF SYSWORDTEMPA_H
-  PAGESEL SYSCOMPLESSTHAN16
-  CALL  SYSCOMPLESSTHAN16
-  PAGESEL $
+  FCALL SYSCOMPLESSTHAN16
   BTFSC SYSBYTETEMPX,0
   GOTO  SYSFORLOOPEND12
 GLOBAL  SYSFORLOOP12
@@ -916,9 +1075,7 @@ SYSFORLOOP12:
   MOVWF GLCDCOLOUR
   MOVF  LINECOLOUR_H,W
   MOVWF GLCDCOLOUR_H
-  PAGESEL PSET_SSD1306
-  CALL  PSET_SSD1306
-  PAGESEL $
+  FCALL PSET_SSD1306
 ;PSet LineX2, DrawLine, LineColour
   MOVF  LINEX2,W
   MOVWF GLCDX
@@ -928,9 +1085,7 @@ SYSFORLOOP12:
   MOVWF GLCDCOLOUR
   MOVF  LINECOLOUR_H,W
   MOVWF GLCDCOLOUR_H
-  PAGESEL PSET_SSD1306
-  CALL  PSET_SSD1306
-  PAGESEL $
+  FCALL PSET_SSD1306
 ;Next
   MOVF  DRAWLINE,W
   MOVWF SYSWORDTEMPA
@@ -940,9 +1095,7 @@ SYSFORLOOP12:
   MOVWF SYSWORDTEMPB
   MOVF  LINEY2_H,W
   MOVWF SYSWORDTEMPB_H
-  PAGESEL SYSCOMPLESSTHAN16
-  CALL  SYSCOMPLESSTHAN16
-  PAGESEL $
+  FCALL SYSCOMPLESSTHAN16
   BTFSC SYSBYTETEMPX,0
   GOTO  SYSFORLOOP12
 GLOBAL  SYSFORLOOPEND12
@@ -972,9 +1125,7 @@ CIRCLE:
   MOVWF SYSINTEGERTEMPB
   CLRF  SYSINTEGERTEMPB_H
 BANKSEL STATUS
-  PAGESEL SYSDIVSUBINT
-  CALL  SYSDIVSUBINT
-  PAGESEL $
+  FCALL SYSDIVSUBINT
   MOVF  SYSINTEGERTEMPA,W
   BANKSEL SYSTEMP1
   MOVWF SYSTEMP1
@@ -999,9 +1150,7 @@ SYSDOLOOP_S3:
   MOVWF SYSINTEGERTEMPB
   CLRF  SYSINTEGERTEMPB_H
 BANKSEL STATUS
-  PAGESEL SYSCOMPLESSTHANINT
-  CALL  SYSCOMPLESSTHANINT
-  PAGESEL $
+  FCALL SYSCOMPLESSTHANINT
   COMF  SYSBYTETEMPX,F
   BTFSS SYSBYTETEMPX,0
   GOTO  SYSDOLOOP_E3
@@ -1020,9 +1169,7 @@ BANKSEL STATUS
   MOVWF GLCDCOLOUR
   MOVF  LINECOLOUR_H,W
   MOVWF GLCDCOLOUR_H
-  PAGESEL PSET_SSD1306
-  CALL  PSET_SSD1306
-  PAGESEL $
+  FCALL PSET_SSD1306
 ;Pset ((xoffset + yordinate), (yoffset + xradius), LineColour)
   BANKSEL YORDINATE
   MOVF  YORDINATE,W
@@ -1038,9 +1185,7 @@ BANKSEL STATUS
   MOVWF GLCDCOLOUR
   MOVF  LINECOLOUR_H,W
   MOVWF GLCDCOLOUR_H
-  PAGESEL PSET_SSD1306
-  CALL  PSET_SSD1306
-  PAGESEL $
+  FCALL PSET_SSD1306
 ;Pset ((xoffset - xradius), (yoffset + yordinate), LineColour)
   BANKSEL XRADIUS
   MOVF  XRADIUS,W
@@ -1056,9 +1201,7 @@ BANKSEL STATUS
   MOVWF GLCDCOLOUR
   MOVF  LINECOLOUR_H,W
   MOVWF GLCDCOLOUR_H
-  PAGESEL PSET_SSD1306
-  CALL  PSET_SSD1306
-  PAGESEL $
+  FCALL PSET_SSD1306
 ;Pset ((xoffset - yordinate), (yoffset + xradius), LineColour)
   BANKSEL YORDINATE
   MOVF  YORDINATE,W
@@ -1074,9 +1217,7 @@ BANKSEL STATUS
   MOVWF GLCDCOLOUR
   MOVF  LINECOLOUR_H,W
   MOVWF GLCDCOLOUR_H
-  PAGESEL PSET_SSD1306
-  CALL  PSET_SSD1306
-  PAGESEL $
+  FCALL PSET_SSD1306
 ;Pset ((xoffset - xradius), (yoffset - yordinate), LineColour)
   BANKSEL XRADIUS
   MOVF  XRADIUS,W
@@ -1092,9 +1233,7 @@ BANKSEL STATUS
   MOVWF GLCDCOLOUR
   MOVF  LINECOLOUR_H,W
   MOVWF GLCDCOLOUR_H
-  PAGESEL PSET_SSD1306
-  CALL  PSET_SSD1306
-  PAGESEL $
+  FCALL PSET_SSD1306
 ;Pset ((xoffset - yordinate), (yoffset - xradius), LineColour)
   BANKSEL YORDINATE
   MOVF  YORDINATE,W
@@ -1110,9 +1249,7 @@ BANKSEL STATUS
   MOVWF GLCDCOLOUR
   MOVF  LINECOLOUR_H,W
   MOVWF GLCDCOLOUR_H
-  PAGESEL PSET_SSD1306
-  CALL  PSET_SSD1306
-  PAGESEL $
+  FCALL PSET_SSD1306
 ;Pset ((xoffset + xradius), (yoffset - yordinate), LineColour)
   BANKSEL XRADIUS
   MOVF  XRADIUS,W
@@ -1128,9 +1265,7 @@ BANKSEL STATUS
   MOVWF GLCDCOLOUR
   MOVF  LINECOLOUR_H,W
   MOVWF GLCDCOLOUR_H
-  PAGESEL PSET_SSD1306
-  CALL  PSET_SSD1306
-  PAGESEL $
+  FCALL PSET_SSD1306
 ;Pset ((xoffset + yordinate), (yoffset - xradius), LineColour)
   BANKSEL YORDINATE
   MOVF  YORDINATE,W
@@ -1146,9 +1281,7 @@ BANKSEL STATUS
   MOVWF GLCDCOLOUR
   MOVF  LINECOLOUR_H,W
   MOVWF GLCDCOLOUR_H
-  PAGESEL PSET_SSD1306
-  CALL  PSET_SSD1306
-  PAGESEL $
+  FCALL PSET_SSD1306
 ;yordinate ++
   BANKSEL YORDINATE
   INCF  YORDINATE,F
@@ -1160,9 +1293,7 @@ BANKSEL STATUS
   CLRF  SYSINTEGERTEMPB
   CLRF  SYSINTEGERTEMPB_H
 BANKSEL STATUS
-  PAGESEL SYSCOMPLESSTHANINT
-  CALL  SYSCOMPLESSTHANINT
-  PAGESEL $
+  FCALL SYSCOMPLESSTHANINT
   BTFSS SYSBYTETEMPX,0
   GOTO  ELSE36_1
 ;radiusErr = radiusErr + 2 * yordinate + 1
@@ -1214,9 +1345,7 @@ ELSE36_1:
   MOVWF SYSINTEGERTEMPB
   CLRF  SYSINTEGERTEMPB_H
 BANKSEL STATUS
-  PAGESEL SYSMULTSUBINT
-  CALL  SYSMULTSUBINT
-  PAGESEL $
+  FCALL SYSMULTSUBINT
   MOVF  SYSINTEGERTEMPX,W
   BANKSEL RADIUSERR
   ADDWF RADIUSERR,F
@@ -1230,6 +1359,92 @@ ENDIF36:
 GLOBAL  SYSDOLOOP_E3
 SYSDOLOOP_E3:
   RETURN
+
+;********************************************************************************
+
+;SOURCE: GLCD_SSD1306.H (1032)
+GLOBAL  CURSOR_POSITION_SSD1306
+CURSOR_POSITION_SSD1306:
+;dim  PosCharX, PosCharX as Word
+;PosCharY = LocY / 8
+;faster than /8
+;PosCharY = LocY
+  MOVF  LOCY,W
+  MOVWF POSCHARY
+;Repeat 3
+  MOVLW 3
+  BANKSEL SYSREPEATTEMP4
+  MOVWF SYSREPEATTEMP4
+GLOBAL  SYSREPEATLOOP4
+SYSREPEATLOOP4:
+;Set C Off
+;B7: ASM Source was:  BCF STATUS,C
+  BCF STATUS,0
+;Rotate PosCharY Right
+  BANKSEL POSCHARY
+  RRF POSCHARY,F
+;End Repeat
+  BANKSEL SYSREPEATTEMP4
+  DECFSZ  SYSREPEATTEMP4,F
+  GOTO  SYSREPEATLOOP4
+GLOBAL  SYSREPEATLOOPEND4
+SYSREPEATLOOPEND4:
+;Write_Command_SSD1306( 0xB0 + PosCharY )   ' set page address
+  MOVLW 176
+  BANKSEL POSCHARY
+  ADDWF POSCHARY,W
+  BANKSEL SSD1306SENDBYTE
+  MOVWF SSD1306SENDBYTE
+BANKSEL STATUS
+  FCALL WRITE_COMMAND_SSD1306
+;PosCharX = ( LocX  & 0x0f )  ' lower nibble
+  MOVLW 15
+  ANDWF LOCX,W
+  BANKSEL POSCHARX
+  MOVWF POSCHARX
+  CLRF  POSCHARX_H
+;Write_Command_SSD1306( PosCharX )
+  MOVF  POSCHARX,W
+  MOVWF SSD1306SENDBYTE
+BANKSEL STATUS
+  FCALL WRITE_COMMAND_SSD1306
+;PosCharX = LocX
+  MOVF  LOCX,W
+  BANKSEL POSCHARX
+  MOVWF POSCHARX
+  CLRF  POSCHARX_H
+;Repeat 4
+  MOVLW 4
+  MOVWF SYSREPEATTEMP4
+GLOBAL  SYSREPEATLOOP5
+SYSREPEATLOOP5:
+;Set C off
+;B7: ASM Source was:  BCF STATUS,C
+  BCF STATUS,0
+;Rotate PosCharX Right
+  RRF POSCHARX_H,F
+  RRF POSCHARX,F
+;End Repeat
+  DECFSZ  SYSREPEATTEMP4,F
+  GOTO  SYSREPEATLOOP5
+GLOBAL  SYSREPEATLOOPEND5
+SYSREPEATLOOPEND5:
+;PosCharX = ( PosCharX & 0x0F ) + 0x10
+  MOVLW 15
+  ANDWF POSCHARX,W
+  MOVWF SYSTEMP1
+  CLRF  SYSTEMP1_H
+  MOVLW 16
+  ADDWF SYSTEMP1,W
+  MOVWF POSCHARX
+  MOVLW 0
+  ADDWFC  SYSTEMP1_H,W
+  MOVWF POSCHARX_H
+;Write_Command_SSD1306 ( PosCharX )
+  MOVF  POSCHARX,W
+  MOVWF SSD1306SENDBYTE
+BANKSEL STATUS
+  LJMP  WRITE_COMMAND_SSD1306
 
 ;********************************************************************************
 
@@ -1306,9 +1521,7 @@ ENDIF41:
   MOVWF SYSWORDTEMPB
   MOVF  GLCDFOREGROUND_H,W
   MOVWF SYSWORDTEMPB_H
-  PAGESEL SYSCOMPEQUAL16
-  CALL  SYSCOMPEQUAL16
-  PAGESEL $
+  FCALL SYSCOMPEQUAL16
   COMF  SYSBYTETEMPX,F
   BTFSS SYSBYTETEMPX,0
   GOTO  ENDIF42
@@ -1335,7 +1548,6 @@ ENDIF42:
   MOVWF LOCX
   MOVF  CHARLOCY,W
   MOVWF LOCY
-  PAGESEL CURSOR_POSITION_SSD1306
   CALL  CURSOR_POSITION_SSD1306
   PAGESEL $
 ;1.14 Added transaction
@@ -1343,30 +1555,22 @@ ENDIF42:
 ;Macro Source: glcd_ssd1306.h (1210)
 ;4wire not supported, see Write_Transaction_Data_SSD1306
 ;HI2CStart
-  PAGESEL HI2CSTART
-  CALL  HI2CSTART
-  PAGESEL $
+  FCALL HI2CSTART
 ;HI2CSend GLCD_I2C_Address
   MOVLW 120
   MOVWF I2CBYTE
-  PAGESEL HI2CSEND
-  CALL  HI2CSEND
-  PAGESEL $
+  FCALL HI2CSEND
 ;HI2CSend 0x40
   MOVLW 64
   MOVWF I2CBYTE
-  PAGESEL HI2CSEND
-  CALL  HI2CSEND
-  PAGESEL $
+  FCALL HI2CSEND
 ;****** GCB Font set handler
 ;if CharCode>=178 and CharCode<=202 then
   MOVF  CHARCODE,W
   MOVWF SYSBYTETEMPA
   MOVLW 178
   MOVWF SYSBYTETEMPB
-  PAGESEL SYSCOMPLESSTHAN
-  CALL  SYSCOMPLESSTHAN
-  PAGESEL $
+  FCALL SYSCOMPLESSTHAN
   COMF  SYSBYTETEMPX,F
   MOVF  SYSBYTETEMPX,W
   BANKSEL SYSTEMP1
@@ -1376,9 +1580,7 @@ ENDIF42:
   MOVWF SYSBYTETEMPB
   MOVLW 202
   MOVWF SYSBYTETEMPA
-  PAGESEL SYSCOMPLESSTHAN
-  CALL  SYSCOMPLESSTHAN
-  PAGESEL $
+  FCALL SYSCOMPLESSTHAN
   COMF  SYSBYTETEMPX,F
   BANKSEL SYSTEMP1
   MOVF  SYSTEMP1,W
@@ -1411,9 +1613,7 @@ SYSSELECT1CASE1:
   GOTO  SYSSELECT1CASE2
   MOVF  CHARCODE,W
   MOVWF SYSSTRINGA
-  PAGESEL GLCDCHARCOL3
-  CALL  GLCDCHARCOL3
-  PAGESEL $
+  FCALL GLCDCHARCOL3
   MOVWF CURRCHARVAL
 ;Case 2: ReadTable GLCDCharCol4, CharCode, CurrCharVal
   GOTO  SYSSELECTEND1
@@ -1426,9 +1626,7 @@ SYSSELECT1CASE2:
   GOTO  SYSSELECT1CASE3
   MOVF  CHARCODE,W
   MOVWF SYSSTRINGA
-  PAGESEL GLCDCHARCOL4
-  CALL  GLCDCHARCOL4
-  PAGESEL $
+  FCALL GLCDCHARCOL4
   MOVWF CURRCHARVAL
 ;Case 3: ReadTable GLCDCharCol5, CharCode, CurrCharVal
   GOTO  SYSSELECTEND1
@@ -1441,9 +1639,7 @@ SYSSELECT1CASE3:
   GOTO  SYSSELECT1CASE4
   MOVF  CHARCODE,W
   MOVWF SYSSTRINGA
-  PAGESEL GLCDCHARCOL5
-  CALL  GLCDCHARCOL5
-  PAGESEL $
+  FCALL GLCDCHARCOL5
   MOVWF CURRCHARVAL
 ;Case 4: ReadTable GLCDCharCol6, CharCode, CurrCharVal
   GOTO  SYSSELECTEND1
@@ -1456,9 +1652,7 @@ SYSSELECT1CASE4:
   GOTO  SYSSELECT1CASE5
   MOVF  CHARCODE,W
   MOVWF SYSSTRINGA
-  PAGESEL GLCDCHARCOL6
-  CALL  GLCDCHARCOL6
-  PAGESEL $
+  FCALL GLCDCHARCOL6
   MOVWF CURRCHARVAL
 ;Case 5: ReadTable GLCDCharCol7, CharCode, CurrCharVal
   GOTO  SYSSELECTEND1
@@ -1471,9 +1665,7 @@ SYSSELECT1CASE5:
   GOTO  SYSSELECTEND1
   MOVF  CHARCODE,W
   MOVWF SYSSTRINGA
-  PAGESEL GLCDCHARCOL7
-  CALL  GLCDCHARCOL7
-  PAGESEL $
+  FCALL GLCDCHARCOL7
   MOVWF CURRCHARVAL
 ;End Select
 GLOBAL  SYSSELECTEND1
@@ -1545,9 +1737,7 @@ SYSFORLOOP19:
   MOVWF GLCDCOLOUR
   MOVF  LINECOLOUR_H,W
   MOVWF GLCDCOLOUR_H
-  PAGESEL PSET_SSD1306
-  CALL  PSET_SSD1306
-  PAGESEL $
+  FCALL PSET_SSD1306
 ;Else
   GOTO  ENDIF46
 GLOBAL  ELSE46_1
@@ -1567,9 +1757,7 @@ ELSE46_1:
   MOVWF GLCDCOLOUR
   MOVF  GLCDBACKGROUND_H,W
   MOVWF GLCDCOLOUR_H
-  PAGESEL PSET_SSD1306
-  CALL  PSET_SSD1306
-  PAGESEL $
+  FCALL PSET_SSD1306
 ;End if
 GLOBAL  ENDIF46
 ENDIF46:
@@ -1592,9 +1780,7 @@ ENDIF46:
   MOVWF SYSBYTETEMPA
   MOVF  GLCDFNTDEFAULTSIZE,W
   MOVWF SYSBYTETEMPB
-  PAGESEL SYSMULTSUB
-  CALL  SYSMULTSUB
-  PAGESEL $
+  FCALL SYSMULTSUB
   MOVF  SYSBYTETEMPX,W
   BANKSEL SYSTEMP2
   MOVWF SYSTEMP2
@@ -1613,9 +1799,7 @@ ENDIF46:
   MOVWF SYSWORDTEMPB
   CLRF  SYSWORDTEMPB_H
 BANKSEL STATUS
-  PAGESEL SYSCOMPEQUAL16
-  CALL  SYSCOMPEQUAL16
-  PAGESEL $
+  FCALL SYSCOMPEQUAL16
   BTFSS SYSBYTETEMPX,0
   GOTO  ENDIF47
 ;PSet [word]CharLocX + CharCol + CharColS + 1, [word]CharLocY + CharRow+CharRowS -1, GLCDBackground
@@ -1647,9 +1831,7 @@ BANKSEL STATUS
   MOVWF GLCDCOLOUR
   MOVF  GLCDBACKGROUND_H,W
   MOVWF GLCDCOLOUR_H
-  PAGESEL PSET_SSD1306
-  CALL  PSET_SSD1306
-  PAGESEL $
+  FCALL PSET_SSD1306
 ;end if
 GLOBAL  ENDIF47
 ENDIF47:
@@ -1710,9 +1892,7 @@ SYSFORLOOPEND16:
 ;Macro Source: glcd_ssd1306.h (1274)
 ;4wire not supported, see Write_Transaction_Data_SSD1306
 ;HI2CStop
-  PAGESEL HI2CSTOP
-  CALL  HI2CSTOP
-  PAGESEL $
+  FCALL HI2CSTOP
 ;Restore
 ;GLCDBackground = 0
   CLRF  GLCDBACKGROUND
@@ -1725,104 +1905,7 @@ SYSFORLOOPEND16:
 
 ;********************************************************************************
 
-;SOURCE: GLCD.H (1238)
-GLOBAL  GLCDDRAWSTRING
-GLCDDRAWSTRING:
-;dim GLCDPrintLoc as word
-;GLCDPrintLoc = StringLocX
-  BANKSEL STRINGLOCX
-  MOVF  STRINGLOCX,W
-  BANKSEL GLCDPRINTLOC
-  MOVWF GLCDPRINTLOC
-  CLRF  GLCDPRINTLOC_H
-;for xchar = 1 to Chars(0)
-  BANKSEL XCHAR
-  CLRF  XCHAR
-  MOVF  SYSCHARSHANDLER,W
-;B9: ASM Source was:  MOVWF AFSR0
-MOVWF FSR0L
-  MOVF  SYSCHARSHANDLER_H,W
-;B9: ASM Source was:  MOVWF AFSR0_H
-MOVWF FSR0H
-  MOVLW 1
-  SUBWF INDF0,W
-;B7: ASM Source was:  BTFSS STATUS, C
-  BTFSS STATUS,0
-  GOTO  SYSFORLOOPEND10
-GLOBAL  SYSFORLOOP10
-SYSFORLOOP10:
-  INCF  XCHAR,F
-;GLCDDrawChar GLCDPrintLoc , CharLocY , Chars(xchar), LineColour
-  BANKSEL GLCDPRINTLOC
-  MOVF  GLCDPRINTLOC,W
-  MOVWF CHARLOCX
-  MOVF  GLCDPRINTLOC_H,W
-  MOVWF CHARLOCX_H
-  BANKSEL XCHAR
-  MOVF  XCHAR,W
-  ADDWF SYSCHARSHANDLER,W
-;B9: ASM Source was:  MOVWF AFSR0
-MOVWF FSR0L
-  MOVLW 0
-  ADDWFC  SYSCHARSHANDLER_H,W
-;B9: ASM Source was:  MOVWF AFSR0_H
-MOVWF FSR0H
-  MOVF  INDF0,W
-  BANKSEL CHARCODE
-  MOVWF CHARCODE
-  CALL  GLCDDRAWCHAR_SSD1306
-;GLCDPrintIncrementPixelPositionMacro
-;Macro Source: glcd.h (1172)
-;GLCDPrintLoc = GLCDPrintLoc + ( GLCDFontWidth * GLCDfntDefaultsize )+1
-  MOVF  GLCDFONTWIDTH,W
-  MOVWF SYSBYTETEMPA
-  MOVF  GLCDFNTDEFAULTSIZE,W
-  MOVWF SYSBYTETEMPB
-  PAGESEL SYSMULTSUB
-  CALL  SYSMULTSUB
-  PAGESEL $
-  MOVF  SYSBYTETEMPX,W
-  BANKSEL SYSTEMP1
-  MOVWF SYSTEMP1
-  BANKSEL GLCDPRINTLOC
-  ADDWF GLCDPRINTLOC,W
-  BANKSEL SYSTEMP2
-  MOVWF SYSTEMP2
-  MOVLW 0
-  BANKSEL GLCDPRINTLOC_H
-  ADDWFC  GLCDPRINTLOC_H,W
-  BANKSEL SYSTEMP2_H
-  MOVWF SYSTEMP2_H
-  MOVLW 1
-  ADDWF SYSTEMP2,W
-  BANKSEL GLCDPRINTLOC
-  MOVWF GLCDPRINTLOC
-  MOVLW 0
-  BANKSEL SYSTEMP2_H
-  ADDWFC  SYSTEMP2_H,W
-  BANKSEL GLCDPRINTLOC_H
-  MOVWF GLCDPRINTLOC_H
-;next
-  BANKSEL SYSCHARSHANDLER
-  MOVF  SYSCHARSHANDLER,W
-;B9: ASM Source was:  MOVWF AFSR0
-MOVWF FSR0L
-  MOVF  SYSCHARSHANDLER_H,W
-;B9: ASM Source was:  MOVWF AFSR0_H
-MOVWF FSR0H
-  MOVF  INDF0,W
-  SUBWF XCHAR,W
-;B7: ASM Source was:  BTFSS STATUS, C
-  BTFSS STATUS,0
-  GOTO  SYSFORLOOP10
-GLOBAL  SYSFORLOOPEND10
-SYSFORLOOPEND10:
-BANKSEL STATUS
-  RETURN
-
-;********************************************************************************
-
-;SOURCE: NEW1013.GCB (132)
+;SOURCE: GLCD_SIMPLE_DEMONSTRATION_HARDWARE_I2C_16F18855_FOR_SSD130632.GCB (133)
 GLOBAL  GLCDLOOP
 GLCDLOOP:
 ;Do Forever
@@ -1854,14 +1937,12 @@ SYSFORLOOP6:
   MOVLW 1
   MOVWF PRINTLOCY
   CLRF  PRINTLOCY_H
-  MOVLW LOW STRINGTABLE8
+  MOVLW LOW STRINGTABLE9
   MOVWF SYSLCDPRINTDATAHANDLER
-  MOVLW (HIGH STRINGTABLE8) | 128
+  MOVLW (HIGH STRINGTABLE9) | 128
   MOVWF SYSLCDPRINTDATAHANDLER_H
 BANKSEL STATUS
-  PAGESEL GLCDPRINT32
-  CALL  GLCDPRINT32
-  PAGESEL $
+  FCALL GLCDPRINT32
 ;Print some more text
 ;GLCDPrint ( 64,  1, "@")
   MOVLW 64
@@ -1871,14 +1952,12 @@ BANKSEL STATUS
   MOVLW 1
   MOVWF PRINTLOCY
   CLRF  PRINTLOCY_H
-  MOVLW LOW STRINGTABLE9
+  MOVLW LOW STRINGTABLE10
   MOVWF SYSLCDPRINTDATAHANDLER
-  MOVLW (HIGH STRINGTABLE9) | 128
+  MOVLW (HIGH STRINGTABLE10) | 128
   MOVWF SYSLCDPRINTDATAHANDLER_H
 BANKSEL STATUS
-  PAGESEL GLCDPRINT32
-  CALL  GLCDPRINT32
-  PAGESEL $
+  FCALL GLCDPRINT32
 ;Print chip speed
 ;GLCDPrint ( 72,  1, ChipMHz)
   MOVLW 72
@@ -1894,9 +1973,7 @@ BANKSEL STATUS
   CLRF  LCDVALUE_H
   CLRF  LCDVALUE_U
   CLRF  LCDVALUE_E
-  PAGESEL GLCDPRINT35
-  CALL  GLCDPRINT35
-  PAGESEL $
+  FCALL GLCDPRINT35
 ;Print some text
 ;GLCDPrint ( 86, 1, "Mhz")
   MOVLW 86
@@ -1906,14 +1983,12 @@ BANKSEL STATUS
   MOVLW 1
   MOVWF PRINTLOCY
   CLRF  PRINTLOCY_H
-  MOVLW LOW STRINGTABLE10
+  MOVLW LOW STRINGTABLE11
   MOVWF SYSLCDPRINTDATAHANDLER
-  MOVLW (HIGH STRINGTABLE10) | 128
+  MOVLW (HIGH STRINGTABLE11) | 128
   MOVWF SYSLCDPRINTDATAHANDLER_H
 BANKSEL STATUS
-  PAGESEL GLCDPRINT32
-  CALL  GLCDPRINT32
-  PAGESEL $
+  FCALL GLCDPRINT32
 ;Draw some text
 ;GLCDDrawString( 1,11,"DrawStr")
   MOVLW 1
@@ -1922,17 +1997,17 @@ BANKSEL STATUS
   MOVLW 11
   BANKSEL CHARLOCY
   MOVWF CHARLOCY
-  MOVLW LOW STRINGTABLE11
+  MOVLW LOW STRINGTABLE12
   BANKSEL SYSCHARSHANDLER
   MOVWF SYSCHARSHANDLER
-  MOVLW (HIGH STRINGTABLE11) | 128
+  MOVLW (HIGH STRINGTABLE12) | 128
   MOVWF SYSCHARSHANDLER_H
   BANKSEL GLCDFOREGROUND
   MOVF  GLCDFOREGROUND,W
   MOVWF LINECOLOUR
   MOVF  GLCDFOREGROUND_H,W
   MOVWF LINECOLOUR_H
-  CALL  GLCDDRAWSTRING
+  FCALL GLCDDRAWSTRING
 ;Draw a box
 ;Box 0,0,GLCD_WIDTH-1, GLCD_HEIGHT-1
   CLRF  LINEX1
@@ -2040,9 +2115,7 @@ BANKSEL STATUS
   BANKSEL SYSCHAR
   MOVWF SYSCHAR
 BANKSEL STATUS
-  PAGESEL FN_CHR
-  CALL  FN_CHR
-  PAGESEL $
+  FCALL FN_CHR
   MOVLW LOW OUTSTRING
   BANKSEL SYSSYSINSTRINGHANDLER
   MOVWF SYSSYSINSTRINGHANDLER
@@ -2050,14 +2123,12 @@ BANKSEL STATUS
   MOVWF SYSSYSINSTRINGHANDLER_H
   MOVLW 3
   MOVWF SYSSTRLEN
-  MOVLW LOW STRINGTABLE67
+  MOVLW LOW STRINGTABLE68
   MOVWF SYSSYSINSTRING3HANDLER
-  MOVLW (HIGH STRINGTABLE67) | 128
+  MOVLW (HIGH STRINGTABLE68) | 128
   MOVWF SYSSYSINSTRING3HANDLER_H
 BANKSEL STATUS
-  PAGESEL FN_PAD
-  CALL  FN_PAD
-  PAGESEL $
+  FCALL FN_PAD
   MOVLW LOW SYSSTRINGPARAM1
 MOVWF FSR1L
   MOVLW HIGH SYSSTRINGPARAM1
@@ -2067,23 +2138,17 @@ MOVWF FSR1H
 MOVWF FSR0L
   MOVLW HIGH CHR
 MOVWF FSR0H
-  PAGESEL SYSCOPYSTRINGPART
-  CALL  SYSCOPYSTRINGPART
-  PAGESEL $
-  MOVLW LOW STRINGTABLE12
+  FCALL SYSCOPYSTRINGPART
+  MOVLW LOW STRINGTABLE13
   MOVWF SYSSTRINGA
-  MOVLW (HIGH STRINGTABLE12) & 127
+  MOVLW (HIGH STRINGTABLE13) & 127
   MOVWF SYSSTRINGA_H
-  PAGESEL SYSREADSTRINGPART
-  CALL  SYSREADSTRINGPART
-  PAGESEL $
+  FCALL SYSREADSTRINGPART
   MOVLW LOW PAD
 MOVWF FSR0L
   MOVLW HIGH PAD
 MOVWF FSR0H
-  PAGESEL SYSCOPYSTRINGPART
-  CALL  SYSCOPYSTRINGPART
-  PAGESEL $
+  FCALL SYSCOPYSTRINGPART
   MOVLW LOW SYSSTRINGPARAM1
 MOVWF FSR0L
   MOVLW HIGH SYSSTRINGPARAM1
@@ -2100,7 +2165,7 @@ MOVWF INDF0
   MOVWF LINECOLOUR
   MOVF  GLCDFOREGROUND_H,W
   MOVWF LINECOLOUR_H
-  CALL  GLCDDRAWSTRING
+  FCALL GLCDDRAWSTRING
 ;GLCD_Close_PageTransaction
 ;Macro Source: glcd_ssd1306.h (1184)
 ;Set cursor position
@@ -2112,12 +2177,9 @@ MOVWF INDF0
   MOVLW 8
   MOVWF SYSBYTETEMPB
 BANKSEL STATUS
-  PAGESEL SYSMULTSUB
-  CALL  SYSMULTSUB
-  PAGESEL $
+  FCALL SYSMULTSUB
   MOVF  SYSBYTETEMPX,W
   MOVWF LOCY
-  PAGESEL CURSOR_POSITION_SSD1306
   CALL  CURSOR_POSITION_SSD1306
   PAGESEL $
 ;Send the buffer to the device using transaction
@@ -2125,21 +2187,15 @@ BANKSEL STATUS
 ;Macro Source: glcd_ssd1306.h (1210)
 ;4wire not supported, see Write_Transaction_Data_SSD1306
 ;HI2CStart
-  PAGESEL HI2CSTART
-  CALL  HI2CSTART
-  PAGESEL $
+  FCALL HI2CSTART
 ;HI2CSend GLCD_I2C_Address
   MOVLW 120
   MOVWF I2CBYTE
-  PAGESEL HI2CSEND
-  CALL  HI2CSEND
-  PAGESEL $
+  FCALL HI2CSEND
 ;HI2CSend 0x40
   MOVLW 64
   MOVWF I2CBYTE
-  PAGESEL HI2CSEND
-  CALL  HI2CSEND
-  PAGESEL $
+  FCALL HI2CSEND
 ;for SSD1306_BufferLocationCalc = 1 to 128
   BANKSEL SSD1306_BUFFERLOCATIONCALC
   CLRF  SSD1306_BUFFERLOCATIONCALC
@@ -2165,9 +2221,7 @@ MOVWF FSR0H
   MOVF  INDF0,W
   BANKSEL I2CBYTE
   MOVWF I2CBYTE
-  PAGESEL HI2CSEND
-  CALL  HI2CSEND
-  PAGESEL $
+  FCALL HI2CSEND
 ;Clear the buffer byte. We need it to be empty for the next page operation
 ;SSD1306_BufferAlias(SSD1306_BufferLocationCalc) = 0
   MOVLW LOW(SSD1306_BUFFERALIAS)
@@ -2189,9 +2243,7 @@ CLRF  INDF0
   MOVWF SYSWORDTEMPB
   CLRF  SYSWORDTEMPB_H
 BANKSEL STATUS
-  PAGESEL SYSCOMPLESSTHAN16
-  CALL  SYSCOMPLESSTHAN16
-  PAGESEL $
+  FCALL SYSCOMPLESSTHAN16
   BTFSC SYSBYTETEMPX,0
   GOTO  SYSFORLOOP7
 GLOBAL  SYSFORLOOPEND7
@@ -2200,9 +2252,7 @@ SYSFORLOOPEND7:
 ;Macro Source: glcd_ssd1306.h (1274)
 ;4wire not supported, see Write_Transaction_Data_SSD1306
 ;HI2CStop
-  PAGESEL HI2CSTOP
-  CALL  HI2CSTOP
-  PAGESEL $
+  FCALL HI2CSTOP
 ;next
   MOVLW 7
   BANKSEL _GLCDPAGE
@@ -2276,22 +2326,16 @@ INITGLCD_SSD1306:
   MOVLW 255
   MOVWF SYSWAITTEMPMS
   CLRF  SYSWAITTEMPMS_H
-  PAGESEL DELAY_MS
-  CALL  DELAY_MS
-  PAGESEL $
+  FCALL DELAY_MS
 ;HI2CMode Master
   MOVLW 12
   MOVWF HI2CCURRENTMODE
-  PAGESEL HI2CMODE
-  CALL  HI2CMODE
-  PAGESEL $
+  FCALL HI2CMODE
 ;Wait 15 ms  'wait for power-up and reset
   MOVLW 15
   MOVWF SYSWAITTEMPMS
   CLRF  SYSWAITTEMPMS_H
-  PAGESEL DELAY_MS
-  CALL  DELAY_MS
-  PAGESEL $
+  FCALL DELAY_MS
 ;Setup code for SSD1306 controllers
 ;Init sequence for 128x64 OLED module
 ;Write_Command_SSD1306(SSD1306_DISPLAYOFF)                    ' 0xAE
@@ -2299,223 +2343,170 @@ INITGLCD_SSD1306:
   BANKSEL SSD1306SENDBYTE
   MOVWF SSD1306SENDBYTE
 BANKSEL STATUS
-  PAGESEL WRITE_COMMAND_SSD1306
-  CALL  WRITE_COMMAND_SSD1306
-  PAGESEL $
+  FCALL WRITE_COMMAND_SSD1306
 ;Write_Command_SSD1306(SSD1306_DEACTIVATE_SCROLL)
   MOVLW 46
   BANKSEL SSD1306SENDBYTE
   MOVWF SSD1306SENDBYTE
 BANKSEL STATUS
-  PAGESEL WRITE_COMMAND_SSD1306
-  CALL  WRITE_COMMAND_SSD1306
-  PAGESEL $
+  FCALL WRITE_COMMAND_SSD1306
 ;Write_Command_SSD1306(SSD1306_SETDISPLAYCLOCKDIV)            ' 0xD5
   MOVLW 213
   BANKSEL SSD1306SENDBYTE
   MOVWF SSD1306SENDBYTE
 BANKSEL STATUS
-  PAGESEL WRITE_COMMAND_SSD1306
-  CALL  WRITE_COMMAND_SSD1306
-  PAGESEL $
+  FCALL WRITE_COMMAND_SSD1306
 ;Write_Command_SSD1306(0x80)                                  ' the suggested ratio 0x80
   MOVLW 128
   BANKSEL SSD1306SENDBYTE
   MOVWF SSD1306SENDBYTE
 BANKSEL STATUS
-  PAGESEL WRITE_COMMAND_SSD1306
-  CALL  WRITE_COMMAND_SSD1306
-  PAGESEL $
+  FCALL WRITE_COMMAND_SSD1306
 ;Write_Command_SSD1306(SSD1306_SETMULTIPLEX)                  ' 0xA8
   MOVLW 168
   BANKSEL SSD1306SENDBYTE
   MOVWF SSD1306SENDBYTE
 BANKSEL STATUS
-  PAGESEL WRITE_COMMAND_SSD1306
-  CALL  WRITE_COMMAND_SSD1306
-  PAGESEL $
+  FCALL WRITE_COMMAND_SSD1306
 ;Write_Command_SSD1306(0x3f)                                 '64 pixels
   MOVLW 63
   BANKSEL SSD1306SENDBYTE
   MOVWF SSD1306SENDBYTE
 BANKSEL STATUS
-  PAGESEL WRITE_COMMAND_SSD1306
-  CALL  WRITE_COMMAND_SSD1306
-  PAGESEL $
+  FCALL WRITE_COMMAND_SSD1306
 ;Write_Command_SSD1306(SSD1306_SETDISPLAYOFFSET)              ' 0xD3
   MOVLW 211
   BANKSEL SSD1306SENDBYTE
   MOVWF SSD1306SENDBYTE
 BANKSEL STATUS
-  PAGESEL WRITE_COMMAND_SSD1306
-  CALL  WRITE_COMMAND_SSD1306
-  PAGESEL $
+  FCALL WRITE_COMMAND_SSD1306
 ;Write_Command_SSD1306(0x00)                                   ' no offset
   BANKSEL SSD1306SENDBYTE
   CLRF  SSD1306SENDBYTE
 BANKSEL STATUS
-  PAGESEL WRITE_COMMAND_SSD1306
-  CALL  WRITE_COMMAND_SSD1306
-  PAGESEL $
+  FCALL WRITE_COMMAND_SSD1306
 ;Write_Command_SSD1306(SSD1306_SETSTARTLINE | 0x00)            ' line #0
   MOVLW 64
   BANKSEL SSD1306SENDBYTE
   MOVWF SSD1306SENDBYTE
 BANKSEL STATUS
-  PAGESEL WRITE_COMMAND_SSD1306
-  CALL  WRITE_COMMAND_SSD1306
-  PAGESEL $
+  FCALL WRITE_COMMAND_SSD1306
 ;Write_Command_SSD1306(SSD1306_CHARGEPUMP)                    ' 0x8D
   MOVLW 141
   BANKSEL SSD1306SENDBYTE
   MOVWF SSD1306SENDBYTE
 BANKSEL STATUS
-  PAGESEL WRITE_COMMAND_SSD1306
-  CALL  WRITE_COMMAND_SSD1306
-  PAGESEL $
+  FCALL WRITE_COMMAND_SSD1306
 ;if (SSD1306_vccstate = SSD1306_EXTERNALVCC) then
 ;Write_Command_SSD1306(0x14)
   MOVLW 20
   BANKSEL SSD1306SENDBYTE
   MOVWF SSD1306SENDBYTE
 BANKSEL STATUS
-  PAGESEL WRITE_COMMAND_SSD1306
-  CALL  WRITE_COMMAND_SSD1306
-  PAGESEL $
+  FCALL WRITE_COMMAND_SSD1306
 ;end if
 ;Write_Command_SSD1306(SSD1306_MEMORYMODE)                    ' 0x20
   MOVLW 32
   BANKSEL SSD1306SENDBYTE
   MOVWF SSD1306SENDBYTE
 BANKSEL STATUS
-  PAGESEL WRITE_COMMAND_SSD1306
-  CALL  WRITE_COMMAND_SSD1306
-  PAGESEL $
+  FCALL WRITE_COMMAND_SSD1306
 ;Write_Command_SSD1306(0x00)                                  ' 0x00 act like ks0108 - DO NOT SELECT!!
 ;Write_Command_SSD1306(0x10)                                  ' 0x01 act like PCD8544
   MOVLW 16
   BANKSEL SSD1306SENDBYTE
   MOVWF SSD1306SENDBYTE
 BANKSEL STATUS
-  PAGESEL WRITE_COMMAND_SSD1306
-  CALL  WRITE_COMMAND_SSD1306
-  PAGESEL $
+  FCALL WRITE_COMMAND_SSD1306
 ;Write_Command_SSD1306(SSD1306_SEGREMAP | 0x1)
   MOVLW 161
   BANKSEL SSD1306SENDBYTE
   MOVWF SSD1306SENDBYTE
 BANKSEL STATUS
-  PAGESEL WRITE_COMMAND_SSD1306
-  CALL  WRITE_COMMAND_SSD1306
-  PAGESEL $
+  FCALL WRITE_COMMAND_SSD1306
 ;Write_Command_SSD1306(SSD1306_COMSCANDEC)
   MOVLW 200
   BANKSEL SSD1306SENDBYTE
   MOVWF SSD1306SENDBYTE
 BANKSEL STATUS
-  PAGESEL WRITE_COMMAND_SSD1306
-  CALL  WRITE_COMMAND_SSD1306
-  PAGESEL $
+  FCALL WRITE_COMMAND_SSD1306
 ;Write_Command_SSD1306(SSD1306_SETCOMPINS)                    ' 0xDA
   MOVLW 218
   BANKSEL SSD1306SENDBYTE
   MOVWF SSD1306SENDBYTE
 BANKSEL STATUS
-  PAGESEL WRITE_COMMAND_SSD1306
-  CALL  WRITE_COMMAND_SSD1306
-  PAGESEL $
+  FCALL WRITE_COMMAND_SSD1306
 ;Write_Command_SSD1306(0x12)                                 '64 pixels
   MOVLW 18
   BANKSEL SSD1306SENDBYTE
   MOVWF SSD1306SENDBYTE
 BANKSEL STATUS
-  PAGESEL WRITE_COMMAND_SSD1306
-  CALL  WRITE_COMMAND_SSD1306
-  PAGESEL $
+  FCALL WRITE_COMMAND_SSD1306
 ;Write_Command_SSD1306(SSD1306_SETCONTRAST)                   ' 0x81
   MOVLW 129
   BANKSEL SSD1306SENDBYTE
   MOVWF SSD1306SENDBYTE
 BANKSEL STATUS
-  PAGESEL WRITE_COMMAND_SSD1306
-  CALL  WRITE_COMMAND_SSD1306
-  PAGESEL $
+  FCALL WRITE_COMMAND_SSD1306
 ;if SSD1306_vccstate = SSD1306_EXTERNALVCC then
 ;Write_Command_SSD1306(0xCF)
   MOVLW 207
   BANKSEL SSD1306SENDBYTE
   MOVWF SSD1306SENDBYTE
 BANKSEL STATUS
-  PAGESEL WRITE_COMMAND_SSD1306
-  CALL  WRITE_COMMAND_SSD1306
-  PAGESEL $
+  FCALL WRITE_COMMAND_SSD1306
 ;end if
 ;Write_Command_SSD1306(SSD1306_SETPRECHARGE)                  ' 0xd9
   MOVLW 217
   BANKSEL SSD1306SENDBYTE
   MOVWF SSD1306SENDBYTE
 BANKSEL STATUS
-  PAGESEL WRITE_COMMAND_SSD1306
-  CALL  WRITE_COMMAND_SSD1306
-  PAGESEL $
+  FCALL WRITE_COMMAND_SSD1306
 ;if SSD1306_vccstate = SSD1306_EXTERNALVCC then
 ;Write_Command_SSD1306(0xF1)
   MOVLW 241
   BANKSEL SSD1306SENDBYTE
   MOVWF SSD1306SENDBYTE
 BANKSEL STATUS
-  PAGESEL WRITE_COMMAND_SSD1306
-  CALL  WRITE_COMMAND_SSD1306
-  PAGESEL $
+  FCALL WRITE_COMMAND_SSD1306
 ;end if
 ;Write_Command_SSD1306(SSD1306_SETVCOMDETECT)                 ' 0xDB
   MOVLW 219
   BANKSEL SSD1306SENDBYTE
   MOVWF SSD1306SENDBYTE
 BANKSEL STATUS
-  PAGESEL WRITE_COMMAND_SSD1306
-  CALL  WRITE_COMMAND_SSD1306
-  PAGESEL $
+  FCALL WRITE_COMMAND_SSD1306
 ;Write_Command_SSD1306(0x40)
   MOVLW 64
   BANKSEL SSD1306SENDBYTE
   MOVWF SSD1306SENDBYTE
 BANKSEL STATUS
-  PAGESEL WRITE_COMMAND_SSD1306
-  CALL  WRITE_COMMAND_SSD1306
-  PAGESEL $
+  FCALL WRITE_COMMAND_SSD1306
 ;Write_Command_SSD1306(SSD1306_DISPLAYALLON_RESUME)           ' 0xA4
   MOVLW 164
   BANKSEL SSD1306SENDBYTE
   MOVWF SSD1306SENDBYTE
 BANKSEL STATUS
-  PAGESEL WRITE_COMMAND_SSD1306
-  CALL  WRITE_COMMAND_SSD1306
-  PAGESEL $
+  FCALL WRITE_COMMAND_SSD1306
 ;Write_Command_SSD1306(SSD1306_NORMALDISPLAY)                 ' 0xA6
   MOVLW 166
   BANKSEL SSD1306SENDBYTE
   MOVWF SSD1306SENDBYTE
 BANKSEL STATUS
-  PAGESEL WRITE_COMMAND_SSD1306
-  CALL  WRITE_COMMAND_SSD1306
-  PAGESEL $
+  FCALL WRITE_COMMAND_SSD1306
 ;Clear screen Here
 ;GLCDCLS_SSD1306
-  PAGESEL GLCDCLS_SSD1306
-  CALL  GLCDCLS_SSD1306
-  PAGESEL $
+  FCALL GLCDCLS_SSD1306
 ;Write_Command_SSD1306(SSD1306_DISPLAYON)                     '--turn on oled panel
   MOVLW 175
   BANKSEL SSD1306SENDBYTE
   MOVWF SSD1306SENDBYTE
 BANKSEL STATUS
-  PAGESEL WRITE_COMMAND_SSD1306
-  GOTO  WRITE_COMMAND_SSD1306
+  LJMP  WRITE_COMMAND_SSD1306
 
 ;********************************************************************************
 
-;SOURCE: NEW1013.GCB (27)
+;SOURCE: GLCD_SIMPLE_DEMONSTRATION_HARDWARE_I2C_16F18855_FOR_SSD130632.GCB (27)
 GLOBAL  INITPPS
 INITPPS:
 ;UNLOCKPPS
@@ -2693,9 +2684,7 @@ _LINE:
   MOVWF SYSINTEGERTEMPB_H
   CLRF  SYSINTEGERTEMPA
   CLRF  SYSINTEGERTEMPA_H
-  PAGESEL SYSCOMPLESSTHANINT
-  CALL  SYSCOMPLESSTHANINT
-  PAGESEL $
+  FCALL SYSCOMPLESSTHANINT
   BTFSS SYSBYTETEMPX,0
   GOTO  ELSE60_1
 ;LineStepX = 1
@@ -2720,9 +2709,7 @@ ENDIF60:
   MOVWF SYSINTEGERTEMPB_H
   CLRF  SYSINTEGERTEMPA
   CLRF  SYSINTEGERTEMPA_H
-  PAGESEL SYSCOMPLESSTHANINT
-  CALL  SYSCOMPLESSTHANINT
-  PAGESEL $
+  FCALL SYSCOMPLESSTHANINT
   BTFSS SYSBYTETEMPX,0
   GOTO  ELSE61_1
 ;LineStepY = 1
@@ -2749,9 +2736,7 @@ ENDIF61:
   MOVWF SYSINTEGERTEMPB
   MOVF  LINEDIFFX_H,W
   MOVWF SYSINTEGERTEMPB_H
-  PAGESEL SYSMULTSUBINT
-  CALL  SYSMULTSUBINT
-  PAGESEL $
+  FCALL SYSMULTSUBINT
   MOVF  SYSINTEGERTEMPX,W
   MOVWF LINEDIFFX
   MOVF  SYSINTEGERTEMPX_H,W
@@ -2765,9 +2750,7 @@ ENDIF61:
   MOVWF SYSINTEGERTEMPB
   MOVF  LINEDIFFY_H,W
   MOVWF SYSINTEGERTEMPB_H
-  PAGESEL SYSMULTSUBINT
-  CALL  SYSMULTSUBINT
-  PAGESEL $
+  FCALL SYSMULTSUBINT
   MOVF  SYSINTEGERTEMPX,W
   MOVWF LINEDIFFY
   MOVF  SYSINTEGERTEMPX_H,W
@@ -2780,9 +2763,7 @@ ENDIF61:
   MOVLW 2
   MOVWF SYSINTEGERTEMPB
   CLRF  SYSINTEGERTEMPB_H
-  PAGESEL SYSMULTSUBINT
-  CALL  SYSMULTSUBINT
-  PAGESEL $
+  FCALL SYSMULTSUBINT
   MOVF  SYSINTEGERTEMPX,W
   MOVWF LINEDIFFX_X2
   MOVF  SYSINTEGERTEMPX_H,W
@@ -2795,9 +2776,7 @@ ENDIF61:
   MOVLW 2
   MOVWF SYSINTEGERTEMPB
   CLRF  SYSINTEGERTEMPB_H
-  PAGESEL SYSMULTSUBINT
-  CALL  SYSMULTSUBINT
-  PAGESEL $
+  FCALL SYSMULTSUBINT
   MOVF  SYSINTEGERTEMPX,W
   MOVWF LINEDIFFY_X2
   MOVF  SYSINTEGERTEMPX_H,W
@@ -2811,9 +2790,7 @@ ENDIF61:
   MOVWF SYSINTEGERTEMPB
   MOVF  LINEDIFFY_H,W
   MOVWF SYSINTEGERTEMPB_H
-  PAGESEL SYSCOMPLESSTHANINT
-  CALL  SYSCOMPLESSTHANINT
-  PAGESEL $
+  FCALL SYSCOMPLESSTHANINT
   COMF  SYSBYTETEMPX,F
   BTFSS SYSBYTETEMPX,0
   GOTO  ELSE62_1
@@ -2835,9 +2812,7 @@ SYSDOLOOP_S4:
   MOVWF SYSWORDTEMPB
   MOVF  LINEX2_H,W
   MOVWF SYSWORDTEMPB_H
-  PAGESEL SYSCOMPEQUAL16
-  CALL  SYSCOMPEQUAL16
-  PAGESEL $
+  FCALL SYSCOMPEQUAL16
   COMF  SYSBYTETEMPX,F
   BTFSS SYSBYTETEMPX,0
   GOTO  SYSDOLOOP_E4
@@ -2850,9 +2825,7 @@ SYSDOLOOP_S4:
   MOVWF GLCDCOLOUR
   MOVF  LINECOLOUR_H,W
   MOVWF GLCDCOLOUR_H
-  PAGESEL PSET_SSD1306
-  CALL  PSET_SSD1306
-  PAGESEL $
+  FCALL PSET_SSD1306
 ;LineX1 += LineStepX
   MOVF  LINESTEPX,W
   ADDWF LINEX1,F
@@ -2865,9 +2838,7 @@ SYSDOLOOP_S4:
   MOVWF SYSINTEGERTEMPA_H
   CLRF  SYSINTEGERTEMPB
   CLRF  SYSINTEGERTEMPB_H
-  PAGESEL SYSCOMPLESSTHANINT
-  CALL  SYSCOMPLESSTHANINT
-  PAGESEL $
+  FCALL SYSCOMPLESSTHANINT
   BTFSS SYSBYTETEMPX,0
   GOTO  ELSE63_1
 ;LineErr += LineDiffY_x2
@@ -2917,9 +2888,7 @@ SYSDOLOOP_E4:
   MOVWF GLCDCOLOUR
   MOVF  LINECOLOUR_H,W
   MOVWF GLCDCOLOUR_H
-  PAGESEL PSET_SSD1306
-  CALL  PSET_SSD1306
-  PAGESEL $
+  FCALL PSET_SSD1306
 ;else
   GOTO  ENDIF62
 GLOBAL  ELSE62_1
@@ -2942,9 +2911,7 @@ SYSDOLOOP_S5:
   MOVWF SYSWORDTEMPB
   MOVF  LINEY2_H,W
   MOVWF SYSWORDTEMPB_H
-  PAGESEL SYSCOMPEQUAL16
-  CALL  SYSCOMPEQUAL16
-  PAGESEL $
+  FCALL SYSCOMPEQUAL16
   COMF  SYSBYTETEMPX,F
   BTFSS SYSBYTETEMPX,0
   GOTO  SYSDOLOOP_E5
@@ -2957,9 +2924,7 @@ SYSDOLOOP_S5:
   MOVWF GLCDCOLOUR
   MOVF  LINECOLOUR_H,W
   MOVWF GLCDCOLOUR_H
-  PAGESEL PSET_SSD1306
-  CALL  PSET_SSD1306
-  PAGESEL $
+  FCALL PSET_SSD1306
 ;LineY1 += LineStepY
   MOVF  LINESTEPY,W
   ADDWF LINEY1,F
@@ -2972,9 +2937,7 @@ SYSDOLOOP_S5:
   MOVWF SYSINTEGERTEMPA_H
   CLRF  SYSINTEGERTEMPB
   CLRF  SYSINTEGERTEMPB_H
-  PAGESEL SYSCOMPLESSTHANINT
-  CALL  SYSCOMPLESSTHANINT
-  PAGESEL $
+  FCALL SYSCOMPLESSTHANINT
   BTFSS SYSBYTETEMPX,0
   GOTO  ELSE64_1
 ;LineErr += LineDiffX_x2
@@ -3024,9 +2987,7 @@ SYSDOLOOP_E5:
   MOVWF GLCDCOLOUR
   MOVF  LINECOLOUR_H,W
   MOVWF GLCDCOLOUR_H
-  PAGESEL PSET_SSD1306
-  CALL  PSET_SSD1306
-  PAGESEL $
+  FCALL PSET_SSD1306
 ;end if
 GLOBAL  ENDIF62
 ENDIF62:
@@ -3036,8 +2997,7 @@ ENDIF62:
 
 ;START OF PROGRAM MEMORY PAGE 1
 
- ORG 2048
-
+  ORG 2048
 ;SOURCE: STRING.H (536)
 GLOBAL  FN_CHR
 FN_CHR:
@@ -3070,92 +3030,6 @@ ENDIF76:
   MOVWF SYSCHR_1
 BANKSEL STATUS
   RETURN
-
-;********************************************************************************
-
-;SOURCE: GLCD_SSD1306.H (1032)
-GLOBAL  CURSOR_POSITION_SSD1306
-CURSOR_POSITION_SSD1306:
-;dim  PosCharX, PosCharX as Word
-;PosCharY = LocY / 8
-;faster than /8
-;PosCharY = LocY
-  MOVF  LOCY,W
-  MOVWF POSCHARY
-;Repeat 3
-  MOVLW 3
-  BANKSEL SYSREPEATTEMP4
-  MOVWF SYSREPEATTEMP4
-GLOBAL  SYSREPEATLOOP4
-SYSREPEATLOOP4:
-;Set C Off
-;B7: ASM Source was:  BCF STATUS,C
-  BCF STATUS,0
-;Rotate PosCharY Right
-  BANKSEL POSCHARY
-  RRF POSCHARY,F
-;End Repeat
-  BANKSEL SYSREPEATTEMP4
-  DECFSZ  SYSREPEATTEMP4,F
-  GOTO  SYSREPEATLOOP4
-GLOBAL  SYSREPEATLOOPEND4
-SYSREPEATLOOPEND4:
-;Write_Command_SSD1306( 0xB0 + PosCharY )   ' set page address
-  MOVLW 176
-  BANKSEL POSCHARY
-  ADDWF POSCHARY,W
-  BANKSEL SSD1306SENDBYTE
-  MOVWF SSD1306SENDBYTE
-BANKSEL STATUS
-  CALL  WRITE_COMMAND_SSD1306
-;PosCharX = ( LocX  & 0x0f )  ' lower nibble
-  MOVLW 15
-  ANDWF LOCX,W
-  BANKSEL POSCHARX
-  MOVWF POSCHARX
-  CLRF  POSCHARX_H
-;Write_Command_SSD1306( PosCharX )
-  MOVF  POSCHARX,W
-  MOVWF SSD1306SENDBYTE
-BANKSEL STATUS
-  CALL  WRITE_COMMAND_SSD1306
-;PosCharX = LocX
-  MOVF  LOCX,W
-  BANKSEL POSCHARX
-  MOVWF POSCHARX
-  CLRF  POSCHARX_H
-;Repeat 4
-  MOVLW 4
-  MOVWF SYSREPEATTEMP4
-GLOBAL  SYSREPEATLOOP5
-SYSREPEATLOOP5:
-;Set C off
-;B7: ASM Source was:  BCF STATUS,C
-  BCF STATUS,0
-;Rotate PosCharX Right
-  RRF POSCHARX_H,F
-  RRF POSCHARX,F
-;End Repeat
-  DECFSZ  SYSREPEATTEMP4,F
-  GOTO  SYSREPEATLOOP5
-GLOBAL  SYSREPEATLOOPEND5
-SYSREPEATLOOPEND5:
-;PosCharX = ( PosCharX & 0x0F ) + 0x10
-  MOVLW 15
-  ANDWF POSCHARX,W
-  MOVWF SYSTEMP1
-  CLRF  SYSTEMP1_H
-  MOVLW 16
-  ADDWF SYSTEMP1,W
-  MOVWF POSCHARX
-  MOVLW 0
-  ADDWFC  SYSTEMP1_H,W
-  MOVWF POSCHARX_H
-;Write_Command_SSD1306 ( PosCharX )
-  MOVF  POSCHARX,W
-  MOVWF SSD1306SENDBYTE
-BANKSEL STATUS
-  GOTO  WRITE_COMMAND_SSD1306
 
 ;********************************************************************************
 
@@ -3943,7 +3817,7 @@ SYSFORLOOP14:
   MOVF  SSD1306_BUFFERLOCATIONCALC,W
   BANKSEL LOCY
   MOVWF LOCY
-  CALL  CURSOR_POSITION_SSD1306
+  FCALL CURSOR_POSITION_SSD1306
 ;Open_Transaction_SSD1306
 ;Macro Source: glcd_ssd1306.h (1210)
 ;4wire not supported, see Write_Transaction_Data_SSD1306
@@ -4007,12 +3881,107 @@ SYSFORLOOPEND14:
 ;Cursor_Position_SSD1306 ( 0 , 0 )
   CLRF  LOCX
   CLRF  LOCY
-  CALL  CURSOR_POSITION_SSD1306
+  FCALL CURSOR_POSITION_SSD1306
 ;PrintLocX =0
   BANKSEL PRINTLOCX
   CLRF  PRINTLOCX
 ;PrintLocY =0
   CLRF  PRINTLOCY
+BANKSEL STATUS
+  RETURN
+
+;********************************************************************************
+
+;SOURCE: GLCD.H (1238)
+GLOBAL  GLCDDRAWSTRING
+GLCDDRAWSTRING:
+;dim GLCDPrintLoc as word
+;GLCDPrintLoc = StringLocX
+  BANKSEL STRINGLOCX
+  MOVF  STRINGLOCX,W
+  BANKSEL GLCDPRINTLOC
+  MOVWF GLCDPRINTLOC
+  CLRF  GLCDPRINTLOC_H
+;for xchar = 1 to Chars(0)
+  BANKSEL XCHAR
+  CLRF  XCHAR
+  MOVF  SYSCHARSHANDLER,W
+;B9: ASM Source was:  MOVWF AFSR0
+MOVWF FSR0L
+  MOVF  SYSCHARSHANDLER_H,W
+;B9: ASM Source was:  MOVWF AFSR0_H
+MOVWF FSR0H
+  MOVLW 1
+  SUBWF INDF0,W
+;B7: ASM Source was:  BTFSS STATUS, C
+  BTFSS STATUS,0
+  GOTO  SYSFORLOOPEND10
+GLOBAL  SYSFORLOOP10
+SYSFORLOOP10:
+  INCF  XCHAR,F
+;GLCDDrawChar GLCDPrintLoc , CharLocY , Chars(xchar), LineColour
+  BANKSEL GLCDPRINTLOC
+  MOVF  GLCDPRINTLOC,W
+  MOVWF CHARLOCX
+  MOVF  GLCDPRINTLOC_H,W
+  MOVWF CHARLOCX_H
+  BANKSEL XCHAR
+  MOVF  XCHAR,W
+  ADDWF SYSCHARSHANDLER,W
+;B9: ASM Source was:  MOVWF AFSR0
+MOVWF FSR0L
+  MOVLW 0
+  ADDWFC  SYSCHARSHANDLER_H,W
+;B9: ASM Source was:  MOVWF AFSR0_H
+MOVWF FSR0H
+  MOVF  INDF0,W
+  BANKSEL CHARCODE
+  MOVWF CHARCODE
+  FCALL GLCDDRAWCHAR_SSD1306
+;GLCDPrintIncrementPixelPositionMacro
+;Macro Source: glcd.h (1172)
+;GLCDPrintLoc = GLCDPrintLoc + ( GLCDFontWidth * GLCDfntDefaultsize )+1
+  MOVF  GLCDFONTWIDTH,W
+  MOVWF SYSBYTETEMPA
+  MOVF  GLCDFNTDEFAULTSIZE,W
+  MOVWF SYSBYTETEMPB
+  CALL  SYSMULTSUB
+  MOVF  SYSBYTETEMPX,W
+  BANKSEL SYSTEMP1
+  MOVWF SYSTEMP1
+  BANKSEL GLCDPRINTLOC
+  ADDWF GLCDPRINTLOC,W
+  BANKSEL SYSTEMP2
+  MOVWF SYSTEMP2
+  MOVLW 0
+  BANKSEL GLCDPRINTLOC_H
+  ADDWFC  GLCDPRINTLOC_H,W
+  BANKSEL SYSTEMP2_H
+  MOVWF SYSTEMP2_H
+  MOVLW 1
+  ADDWF SYSTEMP2,W
+  BANKSEL GLCDPRINTLOC
+  MOVWF GLCDPRINTLOC
+  MOVLW 0
+  BANKSEL SYSTEMP2_H
+  ADDWFC  SYSTEMP2_H,W
+  BANKSEL GLCDPRINTLOC_H
+  MOVWF GLCDPRINTLOC_H
+;next
+  BANKSEL SYSCHARSHANDLER
+  MOVF  SYSCHARSHANDLER,W
+;B9: ASM Source was:  MOVWF AFSR0
+MOVWF FSR0L
+  MOVF  SYSCHARSHANDLER_H,W
+;B9: ASM Source was:  MOVWF AFSR0_H
+MOVWF FSR0H
+  MOVF  INDF0,W
+  SUBWF XCHAR,W
+;B7: ASM Source was:  BTFSS STATUS, C
+  BTFSS STATUS,0
+  GOTO  SYSFORLOOP10
+GLOBAL  SYSFORLOOPEND10
+SYSFORLOOPEND10:
 BANKSEL STATUS
   RETURN
 
@@ -4089,9 +4058,7 @@ MOVWF FSR0H
   MOVWF LINECOLOUR
   MOVF  GLCDFOREGROUND_H,W
   MOVWF LINECOLOUR_H
-  PAGESEL GLCDDRAWCHAR_SSD1306
-  CALL  GLCDDRAWCHAR_SSD1306
-  PAGESEL $
+  FCALL GLCDDRAWCHAR_SSD1306
 ;GLCDPrintIncrementPixelPositionMacro
 ;Macro Source: glcd.h (1172)
 ;GLCDPrintLoc = GLCDPrintLoc + ( GLCDFontWidth * GLCDfntDefaultsize )+1
@@ -4271,9 +4238,7 @@ MOVWF FSR0H
   MOVWF LINECOLOUR
   MOVF  GLCDFOREGROUND_H,W
   MOVWF LINECOLOUR_H
-  PAGESEL GLCDDRAWCHAR_SSD1306
-  CALL  GLCDDRAWCHAR_SSD1306
-  PAGESEL $
+  FCALL GLCDDRAWCHAR_SSD1306
 ;GLCDPrintIncrementPixelPositionMacro
 ;Macro Source: glcd.h (1172)
 ;GLCDPrintLoc = GLCDPrintLoc + ( GLCDFontWidth * GLCDfntDefaultsize )+1
@@ -4659,9 +4624,9 @@ MOVWF FSR0H
 MOVWF FSR1L
   MOVLW HIGH PAD
 MOVWF FSR1H
-  MOVLW LOW STRINGTABLE100
+  MOVLW LOW STRINGTABLE101
   MOVWF SYSSTRINGA
-  MOVLW (HIGH STRINGTABLE100) & 127
+  MOVLW (HIGH STRINGTABLE101) & 127
   MOVWF SYSSTRINGA_H
 BANKSEL STATUS
   CALL  SYSREADSTRING
@@ -5969,7 +5934,7 @@ MOVWF PCL
 
 GLOBAL  STRINGTABLE1
 STRINGTABLE1:
-  RETLW 15
+  RETLW 16
   RETLW 71  ;G
   RETLW 114 ;R
   RETLW 101 ;E
@@ -5985,6 +5950,7 @@ STRINGTABLE1:
   RETLW 83  ;S
   RETLW 73  ;I
   RETLW 67  ;C
+  RETLW 32  ;
 
   ALIGN 2;X3
 
@@ -6015,6 +5981,20 @@ STRINGTABLE3:
 
 GLOBAL  STRINGTABLE4
 STRINGTABLE4:
+  RETLW 8
+  RETLW 73  ;I
+  RETLW 84  ;T
+  RETLW 32  ;
+  RETLW 87  ;W
+  RETLW 79  ;O
+  RETLW 82  ;R
+  RETLW 75  ;K
+  RETLW 83  ;S
+
+  ALIGN 2;X3
+
+GLOBAL  STRINGTABLE5
+STRINGTABLE5:
   RETLW 15
   RETLW 86  ;V
   RETLW 101 ;E
@@ -6034,8 +6014,8 @@ STRINGTABLE4:
 
   ALIGN 2;X3
 
-GLOBAL  STRINGTABLE5
-STRINGTABLE5:
+GLOBAL  STRINGTABLE6
+STRINGTABLE6:
   RETLW 12
   RETLW 76  ;L
   RETLW 77  ;M
@@ -6052,8 +6032,8 @@ STRINGTABLE5:
 
   ALIGN 2;X3
 
-GLOBAL  STRINGTABLE6
-STRINGTABLE6:
+GLOBAL  STRINGTABLE7
+STRINGTABLE7:
   RETLW 21
   RETLW 71  ;G
   RETLW 76  ;L
@@ -6079,8 +6059,8 @@ STRINGTABLE6:
 
   ALIGN 2;X3
 
-GLOBAL  STRINGTABLE8
-STRINGTABLE8:
+GLOBAL  STRINGTABLE9
+STRINGTABLE9:
   RETLW 8
   RETLW 80  ;P
   RETLW 114 ;R
@@ -6093,15 +6073,15 @@ STRINGTABLE8:
 
   ALIGN 2;X3
 
-GLOBAL  STRINGTABLE9
-STRINGTABLE9:
+GLOBAL  STRINGTABLE10
+STRINGTABLE10:
   RETLW 1
   RETLW 64  ;
 
   ALIGN 2;X3
 
-GLOBAL  STRINGTABLE10
-STRINGTABLE10:
+GLOBAL  STRINGTABLE11
+STRINGTABLE11:
   RETLW 3
   RETLW 77  ;M
   RETLW 104 ;H
@@ -6109,8 +6089,8 @@ STRINGTABLE10:
 
   ALIGN 2;X3
 
-GLOBAL  STRINGTABLE11
-STRINGTABLE11:
+GLOBAL  STRINGTABLE12
+STRINGTABLE12:
   RETLW 7
   RETLW 68  ;D
   RETLW 114 ;R
@@ -6122,22 +6102,22 @@ STRINGTABLE11:
 
   ALIGN 2;X3
 
-GLOBAL  STRINGTABLE12
-STRINGTABLE12:
+GLOBAL  STRINGTABLE13
+STRINGTABLE13:
   RETLW 1
   RETLW 61  ; (EQUALS)
 
   ALIGN 2;X3
 
-GLOBAL  STRINGTABLE67
-STRINGTABLE67:
+GLOBAL  STRINGTABLE68
+STRINGTABLE68:
   RETLW 1
   RETLW 32  ;
 
   ALIGN 2;X3
 
-GLOBAL  STRINGTABLE100
-STRINGTABLE100:
+GLOBAL  STRINGTABLE101
+STRINGTABLE101:
   RETLW 0
 
   ALIGN 2;X3
@@ -6170,10 +6150,10 @@ WRITE_COMMAND_SSD1306:
 ;START OF PROGRAM MEMORY PAGE 2
 
   ORG 4096
-
 ;START OF PROGRAM MEMORY PAGE 3
 
   ORG 6144
+  ALIGN 2;X2
 ;
 ; Declare Power-On-Reset entry point
 ;
